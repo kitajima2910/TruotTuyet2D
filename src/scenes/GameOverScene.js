@@ -1,11 +1,21 @@
 /**
  * GameOverScene.js — Scene kết thúc game
- * Hiển thị điểm cuối cùng và nút chơi lại
+ * Hiển thị điểm cuối cùng, best score và nút chơi lại.
+ * Nhận score + bestScore từ PlayScene qua init(data).
  */
 
 export class GameOverScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameOverScene' });
+  }
+
+  /**
+   * Nhận dữ liệu từ PlayScene
+   * @param {{ score: number, bestScore: number }} data
+   */
+  init(data) {
+    this._score = data?.score ?? 0;
+    this._bestScore = data?.bestScore ?? 0;
   }
 
   create() {
@@ -16,7 +26,7 @@ export class GameOverScene extends Phaser.Scene {
     this.add.rectangle(centerX, height / 2, width, height, 0x000000, 0.6);
 
     // ── GAME OVER title ──
-    this.add.text(centerX, height * 0.3, 'GAME OVER', {
+    this.add.text(centerX, height * 0.28, 'GAME OVER', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '72px',
       fontStyle: 'bold',
@@ -25,18 +35,26 @@ export class GameOverScene extends Phaser.Scene {
       strokeThickness: 6,
     }).setOrigin(0.5);
 
-    // ── Điểm (placeholder) ──
-    this.add.text(centerX, height * 0.42, 'Điểm của bạn: 0', {
+    // ── Điểm hiện tại ──
+    this.add.text(centerX, height * 0.42, `SCORE: ${this._score}`, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '32px',
+      fontSize: '40px',
+      fontStyle: 'bold',
       color: '#ecf0f1',
     }).setOrigin(0.5);
 
+    // ── Best Score ──
+    this.add.text(centerX, height * 0.50, `BEST: ${this._bestScore}`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '30px',
+      color: '#f1c40f',
+    }).setOrigin(0.5);
+
     // ── Nút Chơi lại ──
-    this._createRetryButton(centerX, height * 0.58);
+    this._createRetryButton(centerX, height * 0.62);
 
     // ── Nút về Menu ──
-    this._createMenuButton(centerX, height * 0.68);
+    this._createMenuButton(centerX, height * 0.72);
   }
 
   _createRetryButton(x, y) {
@@ -47,7 +65,7 @@ export class GameOverScene extends Phaser.Scene {
     bg.fillStyle(0x27ae60, 1);
     bg.fillRoundedRect(x - btnWidth / 2, y - btnHeight / 2, btnWidth, btnHeight, 14);
 
-    this.add.text(x, y, '🔄  CHƠI LẠI', {
+    this.add.text(x, y, 'CHƠI LẠI', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',
       fontStyle: 'bold',
@@ -79,7 +97,7 @@ export class GameOverScene extends Phaser.Scene {
     bg.fillStyle(0x7f8c8d, 1);
     bg.fillRoundedRect(x - btnWidth / 2, y - btnHeight / 2, btnWidth, btnHeight, 14);
 
-    this.add.text(x, y, '🏠  MENU', {
+    this.add.text(x, y, 'MENU', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',
       fontStyle: 'bold',

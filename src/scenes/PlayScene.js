@@ -1,13 +1,15 @@
 /**
  * PlayScene.js — Scene gameplay chính
  *
- * Chỉ khởi tạo Terrain + InputSystem + Player + SpawnSystem.
+ * Chỉ khởi tạo Terrain + InputSystem + Player + SpawnSystem + CollisionSystem + ScoreSystem.
  * Gọi update() mỗi frame — KHÔNG chứa logic spawn, random hay recycle.
  */
 
 import { InputSystem } from '../systems/InputSystem.js';
 import { Player } from '../entities/Player.js';
 import { SpawnSystem } from '../systems/SpawnSystem.js';
+import { CollisionSystem } from '../systems/CollisionSystem.js';
+import { ScoreSystem } from '../systems/ScoreSystem.js';
 
 export class PlayScene extends Phaser.Scene {
   constructor() {
@@ -16,6 +18,9 @@ export class PlayScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
+
+    // ── Trạng thái game ──
+    this._isDead = false;
 
     // ── Biến scrollSpeed dùng chung cho terrain + obstacles ──
     this.scrollSpeed = 300;
@@ -39,9 +44,18 @@ export class PlayScene extends Phaser.Scene {
       minGapX: 80,
       playerSafeZone: 70,
     });
+
+    // ── CollisionSystem (AABB check) ──
+    this._collisionSystem = new CollisionSystem();
+
+    // ── ScoreSystem (điểm + best score) ──
+    this._scoreSystem = new ScoreSystem();
   }
 
   update(_time, delta) {
+    // Nếu đã chết → dừng mọi logic
+    if (this._isDead) return;
+
     // 1. Đọc input
     this._input.update();
 
@@ -55,6 +69,36 @@ export class PlayScene extends Phaser.Scene {
     // 4. Cập nhật SpawnSystem (spawn / di chuyển / recycle)
     const { x: playerX } = this._player.getPosition();
     this._spawnSystem.update(delta, playerX);
+
+    // 5. Kiểm tra va chạm AABB
+    const { isPlayerDead } = this._collisionSystem.check(
+      this._player.sprite,
+      this._spawnSystem._active,
+    );
+
+    // 6. Cập nhật điểm
+    this._scoreSystem.update(this.scrollSpeed, delta);
+
+    // 7. Xử lý chết
+    if (isPlayerDead) {
+      this._handleDeath();
+    }
+  }
+
+  /**
+   * Xử lý khi Player va chạm vật cản
+   */
+  _handleDeath() {
+    this._isDead = true;
+
+    // Lưu best score
+    this._scoreSystem.saveBestScore();
+
+    // Chuyển sang GameOverScene, truyền điểm
+    this.scene.start('GameOverScene', {
+      score: this._scoreSystem.getScore(),
+      bestScore: this._scoreSystem.getBestScore(),
+    });
   }
 
   // ══════════════════════════════════════════════
@@ -104,5 +148,6 @@ export class PlayScene extends Phaser.Scene {
     this._input.destroy();
     this._player.destroy();
     this._spawnSystem.destroy();
+    // CollisionSystem & ScoreSystem không giữ resource Phaser → không cần destroy
   }
 }
