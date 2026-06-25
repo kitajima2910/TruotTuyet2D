@@ -28,10 +28,13 @@ export class Player {
     this.acceleration = 1200;   // px/s² — lực đẩy khi giữ nút
     this.friction = 0.92;       // hệ số giảm tốc mỗi frame (0-1)
     this.maxSpeed = 400;        // px/s — vận tốc cực đại
+    this.tiltAngle = 30;        // độ nghiêng khi di chuyển (degrees)
+    this.tiltSpeed = 6;         // tốc độ lerp rotation (cao = nhanh hơn)
 
     // ── Runtime state ──
     this.velocityX = 0;
     this._currentAnim = null;   // track animation hiện tại
+    this._targetRotation = 0;   // rotation mục tiêu (radians)
 
     // ── Sprite (dùng sprite thay vì rectangle) ──
     this.sprite = scene.add.sprite(x, y, 'player-tren-1');
@@ -83,6 +86,9 @@ export class Player {
 
     // ── Switch animation theo hướng di chuyển ──
     this._updateAnimation(inputDir);
+
+    // ── Rotation nghiêng theo hướng di chuyển ──
+    this._updateRotation(dt);
   }
 
   /**
@@ -94,16 +100,33 @@ export class Player {
 
     if (inputDir < 0) {
       targetAnim = 'player-left';
+      this._targetRotation = Phaser.Math.DegToRad(this.tiltAngle); // nghiêng trái
     } else if (inputDir > 0) {
       targetAnim = 'player-right';
+      this._targetRotation = Phaser.Math.DegToRad(-this.tiltAngle); // nghiêng phải
     } else {
       targetAnim = 'player-idle';
+      this._targetRotation = 0; // về thẳng
     }
 
     // Chỉ play nếu khác animation hiện tại (tránh replay liên tục)
     if (targetAnim !== this._currentAnim) {
       this.sprite.play(targetAnim);
       this._currentAnim = targetAnim;
+    }
+  }
+
+  /**
+   * Smooth rotation — lerp về target rotation mỗi frame
+   * @param {number} dt — delta seconds
+   */
+  _updateRotation(dt) {
+    const diff = this._targetRotation - this.sprite.rotation;
+    // Lerp: chỉ quay khi diff đủ lớn (tránh rung)
+    if (Math.abs(diff) > 0.001) {
+      this.sprite.rotation += diff * this.tiltSpeed * dt;
+    } else {
+      this.sprite.rotation = this._targetRotation;
     }
   }
 
