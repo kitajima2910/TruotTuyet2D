@@ -70,9 +70,9 @@ export class PlayScene extends Phaser.Scene {
     const { x: playerX } = this._player.getPosition();
     this._spawnSystem.update(delta, playerX);
 
-    // 5. Kiểm tra va chạm AABB
+    // 5. Kiểm tra va chạm AABB (dùng hitbox custom từ Player)
     const { isPlayerDead } = this._collisionSystem.check(
-      this._player.sprite,
+      this._player,
       this._spawnSystem._active,
     );
 

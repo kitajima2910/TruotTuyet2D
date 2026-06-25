@@ -16,12 +16,12 @@ export class CollisionSystem {
 
   /**
    * Kiểm tra va chạm giữa Player và danh sách vật cản active
-   * @param {Phaser.GameObjects.Sprite} playerSprite — sprite của Player
+   * @param {Player} player — instance Player (dùng getHitbox() thay vì getBounds())
    * @param {Array} activeObstacles — mảng các Tree/Rock đang active (từ SpawnSystem._active)
    * @returns {{ isPlayerDead: boolean }}
    */
-  check(playerSprite, activeObstacles) {
-    const pb = playerSprite.getBounds();
+  check(player, activeObstacles) {
+    const pb = player.getHitbox();
 
     for (const obstacle of activeObstacles) {
       if (!obstacle.active) continue;

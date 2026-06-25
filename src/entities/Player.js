@@ -31,6 +31,10 @@ export class Player {
     this.tiltAngle = 30;        // độ nghiêng khi di chuyển (degrees)
     this.tiltSpeed = 6;         // tốc độ lerp rotation (cao = nhanh hơn)
 
+    // ── Collision hitbox (nhỏ hơn sprite, bỏ qua transparent padding) ──
+    this._hitboxW = 42;         // px — chiều rộng vùng va chạm thực tế
+    this._hitboxH = 64;         // px — chiều cao vùng va chạm thực tế
+
     // ── Runtime state ──
     this.velocityX = 0;
     this._currentAnim = null;   // track animation hiện tại
@@ -133,6 +137,20 @@ export class Player {
   /** Trả về vị trí hiện tại */
   getPosition() {
     return { x: this.sprite.x, y: this.sprite.y };
+  }
+
+  /**
+   * Trả về hitbox rectangle (nhỏ hơn sprite, bỏ qua padding dư).
+   * Dùng cho AABB collision — không dùng getBounds().
+   * @returns {Phaser.Geom.Rectangle}
+   */
+  getHitbox() {
+    return new Phaser.Geom.Rectangle(
+      this.sprite.x - this._hitboxW / 2,
+      this.sprite.y - this._hitboxH / 2,
+      this._hitboxW,
+      this._hitboxH,
+    );
   }
 
   /**销毁 khi scene stop */
