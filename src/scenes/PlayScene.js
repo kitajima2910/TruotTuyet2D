@@ -67,6 +67,9 @@ export class PlayScene extends Phaser.Scene {
 
     // ── Trạng thái game ──
     this._isDead = false;
+    this._lives = 3;              // 3 mạng
+    this._invincible = false;     // trạng thái bất tử sau khi trúng đòn
+    this._invincibleTimer = 0;    // đếm ngược thời gian bất tử (ms)
 
     // ── Biến scrollSpeed dùng chung cho terrain + obstacles ──
     this.scrollSpeed = cfg.scrollSpeed;
@@ -102,11 +105,18 @@ export class PlayScene extends Phaser.Scene {
     if (!this.scene.isActive('UIScene')) {
       this.scene.launch('UIScene', { level: this._level });
     }
+
+    // ── Gửi trạng thái ban đầu cho UI (sau launch để UIScene đã sẵn sàng) ──
+    this.game.events.emit('livesUpdate', this._lives);
+    this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
   }
 
   update(_time, delta) {
     // Nếu đã chết → dừng mọi logic
     if (this._isDead) return;
+
+    // 0. Cập nhật trạng thái bất tử
+    this._updateInvincibility(delta);
 
     // 1. Đọc input
     this._input.update();
@@ -122,32 +132,86 @@ export class PlayScene extends Phaser.Scene {
     const { x: playerX } = this._player.getPosition();
     this._spawnSystem.update(delta, playerX);
 
-    // 5. Kiểm tra va chạm AABB (dùng hitbox custom từ Player)
-    const { isPlayerDead } = this._collisionSystem.check(
-      this._player,
-      this._spawnSystem._active,
-    );
+    // 5. Kiểm tra va chạm AABB (chỉ khi không bất tử)
+    if (!this._invincible) {
+      const { isPlayerDead } = this._collisionSystem.check(
+        this._player,
+        this._spawnSystem._active,
+      );
+      if (isPlayerDead) {
+        this._handleHit();
+      }
+    }
 
     // 6. Cập nhật điểm
     this._scoreSystem.update(this.scrollSpeed, delta);
 
-    // 7. Xử lý chết
-    if (isPlayerDead) {
-      this._handleDeath();
+    // 7. Gửi điểm về UI mỗi frame
+    this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
+  }
+
+  /**
+   * Cập nhật trạng thái bất tử (invincibility frames)
+   * Player nhấp nháy trong thời gian bất tử
+   * @param {number} delta — ms
+   */
+  _updateInvincibility(delta) {
+    if (!this._invincible) return;
+
+    this._invincibleTimer -= delta;
+    if (this._invincibleTimer <= 0) {
+      this._invincible = false;
+      this._player.sprite.setAlpha(1); // khôi phục độ trong suốt
+      return;
     }
+
+    // Nhấp nháy (blink) mỗi 100ms
+    const blink = Math.floor(this._invincibleTimer / 100) % 2 === 0;
+    this._player.sprite.setAlpha(blink ? 0.3 : 1);
   }
 
   /**
    * Xử lý khi Player va chạm vật cản
+   * - Còn mạng → giảm tim, bất tử tạm thời, reset vị trí
+   * - Hết mạng → game over
+   */
+  _handleHit() {
+    this._lives--;
+    this.game.events.emit('livesUpdate', this._lives);
+    this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
+
+    if (this._lives <= 0) {
+      this._handleDeath();
+    } else {
+      this._enterInvincible();
+    }
+  }
+
+  /** Vào trạng thái bất tử (nhấp nháy 2 giây) */
+  _enterInvincible() {
+    this._invincible = true;
+    this._invincibleTimer = 2000; // 2 giây bất tử
+    this._player.velocityX = 0;
+
+    // Reset player về giữa màn hình
+    this._player.sprite.x = this.scale.width / 2;
+
+    // Chạy animation va chạm ngắn
+    this._player.sprite.play('player-collision');
+  }
+
+  /**
+   * Xử lý chết thật sự — hết mạng
    * - Dừng di chuyển + spawning
-   * - Chạy animation va chạm (player-collision)
-   * - Sau khi animation xong → delay nhẹ → chuyển GameOverScene
+   * - Chạy animation va chạm
+   * - Sau animation → delay → GameOverScene
    */
   _handleDeath() {
     this._isDead = true;
-    // _isDead = true → update() return early → terrain, spawn, input đều dừng
+    this._invincible = false;
+    this._player.sprite.setAlpha(1);
 
-    // Dừng velocity player để đứng yên
+    // Dừng velocity
     this._player.velocityX = 0;
 
     // Chạy animation va chạm
@@ -242,5 +306,9 @@ export class PlayScene extends Phaser.Scene {
     this._player.destroy();
     this._spawnSystem.destroy();
     // CollisionSystem & ScoreSystem không giữ resource Phaser → không cần destroy
+    // Dừng UIScene nếu đang chạy
+    if (this.scene.isActive('UIScene')) {
+      this.scene.stop('UIScene');
+    }
   }
 }
