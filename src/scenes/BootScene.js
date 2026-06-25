@@ -77,7 +77,12 @@ export class BootScene extends Phaser.Scene {
     this.anims.create({
       key: 'player-collision',
       frames: [
+        // Frame đầu lặp 4 lần → thấy rõ trước khi tiếp tục
         { key: 'player-vc-1' },
+        { key: 'player-vc-1' },
+        { key: 'player-vc-1' },
+        { key: 'player-vc-1' },
+        // Các frame còn lại
         { key: 'player-vc-2' },
         { key: 'player-vc-3' },
         { key: 'player-vc-4' },
