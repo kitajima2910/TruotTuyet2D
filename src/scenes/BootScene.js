@@ -34,6 +34,9 @@ export class BootScene extends Phaser.Scene {
     this.load.image('player-vc-3', 'assets/player/va-cham/v3.png');
     this.load.image('player-vc-4', 'assets/player/va-cham/v4.png');
     this.load.image('player-vc-5', 'assets/player/va-cham/v5.png');
+
+    // ── Map texture (nền tuyết cuộn vô hạn) ──
+    this.load.image('map-snow', 'assets/map/ver1/map.png');
   }
 
   create() {

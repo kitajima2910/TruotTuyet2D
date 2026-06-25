@@ -114,44 +114,72 @@ export class PlayScene extends Phaser.Scene {
   }
 
   // ══════════════════════════════════════════════
-  //  TERRAIN — Nền tuyết cuộn vô hạn
+  //  TERRAIN — Parallax multi-layer infinite map
   // ══════════════════════════════════════════════
 
+  /**
+   * Tạo 3 lớp nền cuộn parallax:
+   * L1 — Nền xa (distant mountains):  chậm nhất → hiệu ứng xa, tint lạnh
+   * L2 — Trung cảnh (mid-ground):      tốc độ vừa
+   * L3 — Tiền cảnh (foreground):       nhanh nhất → hiệu ứng gần, sáng rõ
+   */
   _createTerrain() {
     const { width, height } = this.scale;
 
-    // Đường kẻ dọc — vệt trượt tuyết, tạo cảm giác chuyển động
-    const laneX = [width * 0.25, width * 0.5, width * 0.75];
-    this._terrainLines = [];
+    // Lấy kích thước ảnh gốc
+    const tex = this.textures.get('map-snow');
+    const src = tex.getSourceImage();
+    const imgW = src.width;
+    const imgH = src.height;
 
-    for (const x of laneX) {
-      // Mỗi lane gồm nhiều đoạn ngắn xếp dọc, cuộn liên tục
-      const segCount = 6;
-      const segH = 40;
-      const gap = height / segCount;
+    // Tính base scale để ảnh fit đầy chiều rộng màn hình
+    this._tileScaleX = width / imgW;
+    this._tileScaleY = this._tileScaleX; // giữ nguyên tỉ lệ
 
-      for (let i = 0; i < segCount; i++) {
-        const seg = this.add.rectangle(x, i * gap, 3, segH, 0xc8d6e5);
-        seg.setOrigin(0.5, 0);
-        seg.setAlpha(0.45);
-        seg.setDepth(0);
-        this._terrainLines.push(seg);
-      }
-    }
+    // Layer 1 — Nền xa: scale nhỏ → xa, tint lạnh, chậm nhất
+    this._layerFar = this.add.tileSprite(
+      width / 2, height / 2, width, height, 'map-snow',
+    );
+    this._layerFar.setDepth(-3);
+    this._layerFar.setTint(0x8899bb);
+    this._layerFar.tileScaleX = this._tileScaleX * 0.6;
+    this._layerFar.tileScaleY = this._tileScaleY * 0.6;
+
+    // Layer 2 — Trung cảnh: tỉ lệ chuẩn, tốc độ vừa
+    this._layerMid = this.add.tileSprite(
+      width / 2, height / 2, width, height, 'map-snow',
+    );
+    this._layerMid.setDepth(-2);
+    this._layerMid.tileScaleX = this._tileScaleX * 0.8;
+    this._layerMid.tileScaleY = this._tileScaleY * 0.8;
+
+    // Layer 3 — Tiền cảnh: scale lớn → gần, sáng, nhanh nhất
+    this._layerNear = this.add.tileSprite(
+      width / 2, height / 2, width, height, 'map-snow',
+    );
+    this._layerNear.setDepth(-1);
+    this._layerNear.setTint(0xffffff);
+    this._layerNear.tileScaleX = this._tileScaleX;
+    this._layerNear.tileScaleY = this._tileScaleY;
+
+    this._scrollY = 0;
   }
 
+  /**
+   * Cuộn 3 lớp nền với tốc độ khác nhau (parallax).
+   * Nền xa (far) chậm nhất ↔ tiền cảnh (near) nhanh nhất.
+   * @param {number} delta — ms kể từ frame trước
+   */
   _updateTerrain(delta) {
-    const { height } = this.scale;
     const dt = delta / 1000;
-    const moveY = this.scrollSpeed * dt;
+    this._scrollY += this.scrollSpeed * dt;
 
-    for (const seg of this._terrainLines) {
-      seg.y += moveY;
-      // wrap khi xuống hết màn hình
-      if (seg.y > height) {
-        seg.y -= height + 40; // 40 = segH → quay lại phía trên
-      }
-    }
+    // Layer 1 — far: chậm nhất (0.2×), chạy từ trên xuống dưới
+    this._layerFar.tilePositionY = -(this._scrollY * 0.2) / this._layerFar.tileScaleY;
+    // Layer 2 — mid: trung bình (0.5×)
+    this._layerMid.tilePositionY = -(this._scrollY * 0.5) / this._layerMid.tileScaleY;
+    // Layer 3 — near: nhanh nhất (1.0×) — khớp tốc độ vật cản
+    this._layerNear.tilePositionY = -(this._scrollY * 1.0) / this._layerNear.tileScaleY;
   }
 
   // ══════════════════════════════════════════════
