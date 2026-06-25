@@ -27,6 +27,13 @@ export class BootScene extends Phaser.Scene {
     this.load.image('player-phai-2', 'assets/player/phai/p2.png');
     this.load.image('player-phai-3', 'assets/player/phai/p3.png');
     this.load.image('player-phai-4', 'assets/player/phai/p4.png');
+
+    // va-cham (animation khi va chạm)
+    this.load.image('player-vc-1', 'assets/player/va-cham/v1.png');
+    this.load.image('player-vc-2', 'assets/player/va-cham/v2.png');
+    this.load.image('player-vc-3', 'assets/player/va-cham/v3.png');
+    this.load.image('player-vc-4', 'assets/player/va-cham/v4.png');
+    this.load.image('player-vc-5', 'assets/player/va-cham/v5.png');
   }
 
   create() {
@@ -65,6 +72,19 @@ export class BootScene extends Phaser.Scene {
       ],
       frameRate: 10,
       repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'player-collision',
+      frames: [
+        { key: 'player-vc-1' },
+        { key: 'player-vc-2' },
+        { key: 'player-vc-3' },
+        { key: 'player-vc-4' },
+        { key: 'player-vc-5' },
+      ],
+      frameRate: 10,
+      repeat: 0, // chỉ play 1 lần
     });
 
     // Chuyển sang MenuScene

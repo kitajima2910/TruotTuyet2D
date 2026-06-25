@@ -87,17 +87,29 @@ export class PlayScene extends Phaser.Scene {
 
   /**
    * Xử lý khi Player va chạm vật cản
+   * - Dừng di chuyển + spawning
+   * - Chạy animation va chạm (player-collision)
+   * - Sau khi animation xong → delay nhẹ → chuyển GameOverScene
    */
   _handleDeath() {
     this._isDead = true;
+    // _isDead = true → update() return early → terrain, spawn, input đều dừng
 
-    // Lưu best score
-    this._scoreSystem.saveBestScore();
+    // Dừng velocity player để đứng yên
+    this._player.velocityX = 0;
 
-    // Chuyển sang GameOverScene, truyền điểm
-    this.scene.start('GameOverScene', {
-      score: this._scoreSystem.getScore(),
-      bestScore: this._scoreSystem.getBestScore(),
+    // Chạy animation va chạm
+    this._player.sprite.play('player-collision');
+
+    // Khi animation kết thúc → delay 1.5s rồi chuyển scene
+    this._player.sprite.once('animationcomplete', () => {
+      this.time.delayedCall(1500, () => {
+        this._scoreSystem.saveBestScore();
+        this.scene.start('GameOverScene', {
+          score: this._scoreSystem.getScore(),
+          bestScore: this._scoreSystem.getBestScore(),
+        });
+      });
     });
   }
 
