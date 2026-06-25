@@ -134,6 +134,22 @@ export class Player {
     }
   }
 
+  /**
+   * Respawning Player — reset vị trí, vận tốc, animation về trạng thái đầu
+   * @param {number} x — toạ độ X mới
+   * @param {number} y — toạ độ Y mới
+   */
+  respawn(x, y) {
+    this.sprite.setPosition(x, y);
+    this.velocityX = 0;
+    this._currentAnim = null; // force animation switch ở update kế tiếp
+    this.sprite.play('player-idle');
+    this._currentAnim = 'player-idle';
+    this._targetRotation = 0;
+    this.sprite.rotation = 0;
+    this.sprite.setAlpha(1);
+  }
+
   /** Trả về vị trí hiện tại */
   getPosition() {
     return { x: this.sprite.x, y: this.sprite.y };

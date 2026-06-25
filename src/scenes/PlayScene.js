@@ -191,13 +191,10 @@ export class PlayScene extends Phaser.Scene {
   _enterInvincible() {
     this._invincible = true;
     this._invincibleTimer = 2000; // 2 giây bất tử
-    this._player.velocityX = 0;
 
-    // Reset player về giữa màn hình
-    this._player.sprite.x = this.scale.width / 2;
-
-    // Chạy animation va chạm ngắn
-    this._player.sprite.play('player-collision');
+    // Reset player về giữa màn hình, xoá animation ngã
+    const { width, height } = this.scale;
+    this._player.respawn(width / 2, height * 0.75);
   }
 
   /**
