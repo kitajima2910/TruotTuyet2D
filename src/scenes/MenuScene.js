@@ -13,9 +13,9 @@ export class MenuScene extends Phaser.Scene {
     const centerX = width / 2;
 
     // ── Tiêu đề ──
-    this.add.text(centerX, height * 0.3, 'TRƯỢT TUYẾT', {
+    this.add.text(centerX, height * 0.12, 'TRƯỢT TUYẾT', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '64px',
+      fontSize: '56px',
       fontStyle: 'bold',
       color: '#2c3e6b',
       stroke: '#ffffff',
@@ -30,75 +30,97 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // ── Subtitle ──
-    this.add.text(centerX, height * 0.38, '❄️ 2D Snowboarding ❄️', {
+    this.add.text(centerX, height * 0.19, '❄️ 2D Snowboarding ❄️', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '24px',
+      fontSize: '22px',
       color: '#5a7db5',
     }).setOrigin(0.5);
 
-    // ── Nút Start ──
-    this._createStartButton(centerX, height * 0.55);
+    // ── 3 nút chọn màn chơi ──
+    const levels = [
+      { level: 1, label: '🌲 MÀN 1 — Đồi Xanh', color: 0x27ae60, hover: 0x2ecc71, desc: 'Dễ' },
+      { level: 2, label: '⛰️ MÀN 2 — Vách Núi', color: 0xe67e22, hover: 0xf39c12, desc: 'Trung bình' },
+      { level: 3, label: '❄️ MÀN 3 — Bão Tuyết', color: 0xc0392b, hover: 0xe74c3c, desc: 'Khó' },
+    ];
+
+    const startY = height * 0.33;
+    const gap = height * 0.18;
+
+    levels.forEach((lvl, i) => {
+      this._createLevelButton(centerX, startY + gap * i, lvl);
+    });
   }
 
   /**
-   * Tạo nút Start với hover effect
+   * Tạo nút chọn màn chơi
    */
-  _createStartButton(x, y) {
-    const btnWidth = 280;
-    const btnHeight = 70;
+  _createLevelButton(x, y, { level, label, color, hover, desc }) {
+    const btnWidth = 340;
+    const btnHeight = 72;
 
-    // Container chứa button background + text
     const container = this.add.container(x, y);
 
-    // Background nút
+    // Background
     const bg = this.add.graphics();
-    bg.fillStyle(0x3498db, 1);
-    bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 16);
+    bg.fillStyle(color, 1);
+    bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
     container.add(bg);
 
-    // Border nút
+    // Border
     const border = this.add.graphics();
-    border.lineStyle(3, 0x2980b9, 1);
-    border.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 16);
+    border.lineStyle(2, 0xffffff, 0.5);
+    border.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
     container.add(border);
 
-    // Text nút
-    const label = this.add.text(0, 0, '▶  BẮT ĐẦU', {
+    // Label
+    const labelText = this.add.text(0, -8, label, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '32px',
+      fontSize: '22px',
       fontStyle: 'bold',
       color: '#ffffff',
     }).setOrigin(0.5);
-    container.add(label);
+    container.add(labelText);
+
+    // Mô tả độ khó
+    const descText = this.add.text(0, 18, `🔥 ${desc}`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '14px',
+      color: '#ffffffcc',
+    }).setOrigin(0.5);
+    container.add(descText);
+
+    container.setDepth(1);
 
     // Vùng tương tác
     const hitZone = this.add.zone(x, y, btnWidth, btnHeight).setInteractive({ useHandCursor: true });
-    container.setDepth(1);
 
-    // Hover effects
+    let currentColor = color;
+
     hitZone.on('pointerover', () => {
       container.setScale(1.06);
       bg.clear();
-      bg.fillStyle(0x2ecc71, 1);
-      bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 16);
+      bg.fillStyle(hover, 1);
+      bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
       border.clear();
-      border.lineStyle(3, 0x27ae60, 1);
-      border.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 16);
+      border.lineStyle(2, 0xffffff, 0.8);
+      border.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+      currentColor = hover;
     });
 
     hitZone.on('pointerout', () => {
       container.setScale(1);
       bg.clear();
-      bg.fillStyle(0x3498db, 1);
-      bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 16);
+      bg.fillStyle(color, 1);
+      bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
       border.clear();
-      border.lineStyle(3, 0x2980b9, 1);
-      border.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 16);
+      border.lineStyle(2, 0xffffff, 0.5);
+      border.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+      currentColor = color;
     });
 
-    // Click → chuyển PlayScene
+    // Click → chuyển PlayScene với level tương ứng
     hitZone.on('pointerdown', () => {
-      this.scene.start('PlayScene');
+      this.scene.start('PlayScene', { level });
     });
   }
 }

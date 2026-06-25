@@ -1,6 +1,12 @@
 /**
  * PlayScene.js — Scene gameplay chính
  *
+ * Hỗ trợ 3 màn chơi (level 1-3) với map và độ khó khác nhau.
+ * Nhận level qua this.scene.start('PlayScene', { level: 2 }).
+ *
+ * Mỗi level tăng dần scrollSpeed, giảm spawnInterval,
+ * tăng pool size → thử thách hơn.
+ *
  * Chỉ khởi tạo Terrain + InputSystem + Player + SpawnSystem + CollisionSystem + ScoreSystem.
  * Gọi update() mỗi frame — KHÔNG chứa logic spawn, random hay recycle.
  */
@@ -11,21 +17,62 @@ import { SpawnSystem } from '../systems/SpawnSystem.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { ScoreSystem } from '../systems/ScoreSystem.js';
 
+// ── Cấu hình độ khó theo level ──
+const LEVEL_CONFIG = {
+  1: {
+    mapKey: 'map-snow-1',
+    scrollSpeed: 280,
+    spawnInterval: 1400,
+    treePoolSize: 5,
+    rockPoolSize: 5,
+    minGapX: 100,
+    playerSafeZone: 80,
+  },
+  2: {
+    mapKey: 'map-snow-2',
+    scrollSpeed: 350,
+    spawnInterval: 1100,
+    treePoolSize: 7,
+    rockPoolSize: 7,
+    minGapX: 80,
+    playerSafeZone: 70,
+  },
+  3: {
+    mapKey: 'map-snow-3',
+    scrollSpeed: 420,
+    spawnInterval: 850,
+    treePoolSize: 9,
+    rockPoolSize: 9,
+    minGapX: 60,
+    playerSafeZone: 60,
+  },
+};
+
 export class PlayScene extends Phaser.Scene {
   constructor() {
     super({ key: 'PlayScene' });
   }
 
+  /**
+   * Nhận level từ MenuScene
+   * @param {{ level?: number }} data
+   */
+  init(data) {
+    this._level = Phaser.Math.Clamp(data?.level ?? 1, 1, 3);
+  }
+
   create() {
     const { width, height } = this.scale;
+    const cfg = LEVEL_CONFIG[this._level];
 
     // ── Trạng thái game ──
     this._isDead = false;
 
     // ── Biến scrollSpeed dùng chung cho terrain + obstacles ──
-    this.scrollSpeed = 300;
+    this.scrollSpeed = cfg.scrollSpeed;
 
     // ── Terrain (nền tuyết cuộn vô hạn) ──
+    this._mapKey = cfg.mapKey;
     this._createTerrain();
 
     // ── InputSystem ──
@@ -38,11 +85,11 @@ export class PlayScene extends Phaser.Scene {
     // ── SpawnSystem (object pool Tree + Rock) ──
     this._spawnSystem = new SpawnSystem(this, {
       scrollSpeed: this.scrollSpeed,
-      treePoolSize: 6,
-      rockPoolSize: 6,
-      spawnInterval: 1200,
-      minGapX: 80,
-      playerSafeZone: 70,
+      treePoolSize: cfg.treePoolSize,
+      rockPoolSize: cfg.rockPoolSize,
+      spawnInterval: cfg.spawnInterval,
+      minGapX: cfg.minGapX,
+      playerSafeZone: cfg.playerSafeZone,
     });
 
     // ── CollisionSystem (AABB check) ──
@@ -50,6 +97,11 @@ export class PlayScene extends Phaser.Scene {
 
     // ── ScoreSystem (điểm + best score) ──
     this._scoreSystem = new ScoreSystem();
+
+    // ── Launch UI scene (HUD overlay) ──
+    if (!this.scene.isActive('UIScene')) {
+      this.scene.launch('UIScene', { level: this._level });
+    }
   }
 
   update(_time, delta) {
@@ -108,6 +160,7 @@ export class PlayScene extends Phaser.Scene {
         this.scene.start('GameOverScene', {
           score: this._scoreSystem.getScore(),
           bestScore: this._scoreSystem.getBestScore(),
+          level: this._level,
         });
       });
     });
@@ -127,7 +180,7 @@ export class PlayScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Lấy kích thước ảnh gốc
-    const tex = this.textures.get('map-snow');
+    const tex = this.textures.get(this._mapKey);
     const src = tex.getSourceImage();
     const imgW = src.width;
     const imgH = src.height;
@@ -138,7 +191,7 @@ export class PlayScene extends Phaser.Scene {
 
     // Layer 1 — Nền xa: scale nhỏ → xa, tint lạnh, chậm nhất
     this._layerFar = this.add.tileSprite(
-      width / 2, height / 2, width, height, 'map-snow',
+      width / 2, height / 2, width, height, this._mapKey,
     );
     this._layerFar.setDepth(-3);
     this._layerFar.setTint(0x8899bb);
@@ -147,7 +200,7 @@ export class PlayScene extends Phaser.Scene {
 
     // Layer 2 — Trung cảnh: tỉ lệ chuẩn, tốc độ vừa
     this._layerMid = this.add.tileSprite(
-      width / 2, height / 2, width, height, 'map-snow',
+      width / 2, height / 2, width, height, this._mapKey,
     );
     this._layerMid.setDepth(-2);
     this._layerMid.tileScaleX = this._tileScaleX * 0.8;
@@ -155,7 +208,7 @@ export class PlayScene extends Phaser.Scene {
 
     // Layer 3 — Tiền cảnh: scale lớn → gần, sáng, nhanh nhất
     this._layerNear = this.add.tileSprite(
-      width / 2, height / 2, width, height, 'map-snow',
+      width / 2, height / 2, width, height, this._mapKey,
     );
     this._layerNear.setDepth(-1);
     this._layerNear.setTint(0xffffff);

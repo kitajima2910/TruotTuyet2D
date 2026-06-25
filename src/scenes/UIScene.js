@@ -8,11 +8,29 @@ export class UIScene extends Phaser.Scene {
     super({ key: 'UIScene' });
   }
 
+  /**
+   * Nhận level từ PlayScene
+   * @param {{ level?: number }} data
+   */
+  init(data) {
+    this._level = data?.level ?? 1;
+  }
+
   create() {
     const { width } = this.scale;
 
-    // Placeholder HUD elements
-    this.add.text(20, 20, 'SCORE: 0', {
+    // ── Level indicator (góc trên trái) ──
+    this.add.text(20, 20, `MÀN ${this._level}`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '22px',
+      fontStyle: 'bold',
+      color: '#2c3e6b',
+      stroke: '#ffffff',
+      strokeThickness: 3,
+    }).setOrigin(0, 0);
+
+    // ── Score placeholder ──
+    this.add.text(20, 52, 'SCORE: 0', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',
       fontStyle: 'bold',
@@ -21,6 +39,7 @@ export class UIScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setOrigin(0, 0);
 
+    // ── Lives placeholder ──
     this.add.text(width - 20, 20, '❤️ × 3', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',

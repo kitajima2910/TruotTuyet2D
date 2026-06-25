@@ -11,11 +11,12 @@ export class GameOverScene extends Phaser.Scene {
 
   /**
    * Nhận dữ liệu từ PlayScene
-   * @param {{ score: number, bestScore: number }} data
+   * @param {{ score: number, bestScore: number, level: number }} data
    */
   init(data) {
     this._score = data?.score ?? 0;
     this._bestScore = data?.bestScore ?? 0;
+    this._level = data?.level ?? 1;
   }
 
   create() {
@@ -85,7 +86,7 @@ export class GameOverScene extends Phaser.Scene {
       bg.fillRoundedRect(x - btnWidth / 2, y - btnHeight / 2, btnWidth, btnHeight, 14);
     });
     hitZone.on('pointerdown', () => {
-      this.scene.start('PlayScene');
+      this.scene.start('PlayScene', { level: this._level });
     });
   }
 
