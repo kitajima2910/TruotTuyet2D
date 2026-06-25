@@ -29,8 +29,8 @@ export class UIScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setOrigin(0, 0);
 
-    // ── Score placeholder ──
-    this.add.text(20, 52, 'SCORE: 0', {
+    // ── Điểm ──
+    this.add.text(20, 52, 'ĐIỂM: 0', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',
       fontStyle: 'bold',

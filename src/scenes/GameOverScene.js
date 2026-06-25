@@ -26,8 +26,8 @@ export class GameOverScene extends Phaser.Scene {
     // Overlay tối
     this.add.rectangle(centerX, height / 2, width, height, 0x000000, 0.6);
 
-    // ── GAME OVER title ──
-    this.add.text(centerX, height * 0.28, 'GAME OVER', {
+    // ── KẾT THÚC title ──
+    this.add.text(centerX, height * 0.28, 'KẾT THÚC', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '72px',
       fontStyle: 'bold',
@@ -37,15 +37,15 @@ export class GameOverScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // ── Điểm hiện tại ──
-    this.add.text(centerX, height * 0.42, `SCORE: ${this._score}`, {
+    this.add.text(centerX, height * 0.42, `ĐIỂM: ${this._score}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '40px',
       fontStyle: 'bold',
       color: '#ecf0f1',
     }).setOrigin(0.5);
 
-    // ── Best Score ──
-    this.add.text(centerX, height * 0.50, `BEST: ${this._bestScore}`, {
+    // ── Điểm cao nhất ──
+    this.add.text(centerX, height * 0.50, `CAO NHẤT: ${this._bestScore}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '30px',
       color: '#f1c40f',

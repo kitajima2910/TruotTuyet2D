@@ -30,7 +30,7 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // ── Subtitle ──
-    this.add.text(centerX, height * 0.19, '❄️ 2D Snowboarding ❄️', {
+    this.add.text(centerX, height * 0.19, '❄️ Trượt tuyết 2D ❄️', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '22px',
       color: '#5a7db5',
@@ -38,9 +38,9 @@ export class MenuScene extends Phaser.Scene {
 
     // ── 3 nút chọn màn chơi ──
     const levels = [
-      { level: 1, label: '🌲 MÀN 1 — Đồi Xanh', color: 0x27ae60, hover: 0x2ecc71, desc: 'Dễ' },
-      { level: 2, label: '⛰️ MÀN 2 — Vách Núi', color: 0xe67e22, hover: 0xf39c12, desc: 'Trung bình' },
-      { level: 3, label: '❄️ MÀN 3 — Bão Tuyết', color: 0xc0392b, hover: 0xe74c3c, desc: 'Khó' },
+      { level: 1, label: '❄️ MÀN 1 — Tuyết Trắng', color: 0x3498db, hover: 0x5dade2, desc: 'Dễ' },
+      { level: 2, label: '🌿 MÀN 2 — Cỏ Tuyết',   color: 0x27ae60, hover: 0x2ecc71, desc: 'Trung bình' },
+      { level: 3, label: '🏜️ MÀN 3 — Sa Mạc Tuyết', color: 0xe67e22, hover: 0xf39c12, desc: 'Khó' },
     ];
 
     const startY = height * 0.33;
