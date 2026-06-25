@@ -23,6 +23,11 @@ export class GameOverScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const centerX = width / 2;
 
+    // Tắt UIScene nếu còn sót từ gameplay trước
+    if (this.scene.isActive('UIScene')) {
+      this.scene.stop('UIScene');
+    }
+
     // Overlay tối
     this.add.rectangle(centerX, height / 2, width, height, 0x000000, 0.6);
 

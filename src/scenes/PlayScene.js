@@ -101,14 +101,16 @@ export class PlayScene extends Phaser.Scene {
     // ── ScoreSystem (điểm + best score) ──
     this._scoreSystem = new ScoreSystem();
 
-    // ── Launch UI scene (HUD overlay) ──
+    // ── Launch UI scene (HUD overlay) — chỉ hiện khi đang chơi ──
     if (!this.scene.isActive('UIScene')) {
       this.scene.launch('UIScene', { level: this._level });
     }
 
-    // ── Gửi trạng thái ban đầu cho UI (sau launch để UIScene đã sẵn sàng) ──
-    this.game.events.emit('livesUpdate', this._lives);
-    this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
+    // ── Gửi trạng thái ban đầu cho UI (delay 1 frame để UIScene kịp create) ──
+    this.time.delayedCall(0, () => {
+      this.game.events.emit('livesUpdate', this._lives);
+      this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
+    });
   }
 
   update(_time, delta) {

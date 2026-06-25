@@ -59,14 +59,14 @@ export class UIScene extends Phaser.Scene {
 
   /** Cập nhật điểm */
   _onScoreUpdate(score) {
-    if (this._scoreText) {
+    if (this._scoreText && this._scoreText.active) {
       this._scoreText.setText(`ĐIỂM: ${score}`);
     }
   }
 
   /** Cập nhật mạng sống */
   _onLivesUpdate(lives) {
-    if (this._livesText) {
+    if (this._livesText && this._livesText.active) {
       this._livesText.setText(`❤️ × ${lives}`);
     }
   }

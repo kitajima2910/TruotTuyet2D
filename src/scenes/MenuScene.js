@@ -12,6 +12,11 @@ export class MenuScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const centerX = width / 2;
 
+    // Tắt UIScene nếu còn sót (vd: quay về menu từ game over)
+    if (this.scene.isActive('UIScene')) {
+      this.scene.stop('UIScene');
+    }
+
     // ── Tiêu đề ──
     this.add.text(centerX, height * 0.12, 'TRƯỢT TUYẾT', {
       fontFamily: 'Arial, sans-serif',
