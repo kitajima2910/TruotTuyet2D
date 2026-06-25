@@ -8,6 +8,11 @@
  *
  * KHÔNG dùng Phaser Arcade/Matter Physics.
  * Player là sprite thuần, position cập nhật thủ công.
+ *
+ * Animations:
+ *   - player-idle  (tren): mặc định, di chuyển lên
+ *   - player-left  (trai): di chuyển bên trái
+ *   - player-right (phai): di chuyển bên phải
  */
 
 export class Player {
@@ -26,10 +31,15 @@ export class Player {
 
     // ── Runtime state ──
     this.velocityX = 0;
+    this._currentAnim = null;   // track animation hiện tại
 
-    // ── Sprite ──
-    this.sprite = scene.add.rectangle(x, y, 40, 60, 0x3498db);
+    // ── Sprite (dùng sprite thay vì rectangle) ──
+    this.sprite = scene.add.sprite(x, y, 'player-tren-1');
     this.sprite.setOrigin(0.5);
+
+    // ── Chạy animation mặc định (idle/tren) ──
+    this.sprite.play('player-idle');
+    this._currentAnim = 'player-idle';
   }
 
   /**
@@ -69,6 +79,31 @@ export class Player {
     } else if (this.sprite.x > gameW - halfW) {
       this.sprite.x = gameW - halfW;
       this.velocityX = 0;
+    }
+
+    // ── Switch animation theo hướng di chuyển ──
+    this._updateAnimation(inputDir);
+  }
+
+  /**
+   * Chuyển animation dựa trên input direction
+   * @param {number} inputDir — -1 (trái), 0 (idle), 1 (phải)
+   */
+  _updateAnimation(inputDir) {
+    let targetAnim;
+
+    if (inputDir < 0) {
+      targetAnim = 'player-left';
+    } else if (inputDir > 0) {
+      targetAnim = 'player-right';
+    } else {
+      targetAnim = 'player-idle';
+    }
+
+    // Chỉ play nếu khác animation hiện tại (tránh replay liên tục)
+    if (targetAnim !== this._currentAnim) {
+      this.sprite.play(targetAnim);
+      this._currentAnim = targetAnim;
     }
   }
 
