@@ -1,44 +1,50 @@
 /**
  * Rock.js — Vật cản đá
  *
- * Vẽ bằng Graphics (hình bầu dục nhiều lớp), không tạo texture mới.
+ * Sử dụng sprite với 20 biến thể ngẫu nhiên từ assets/da/.
  * Hỗ trợ object pool: spawn / recycle / tái sử dụng.
+ * Mỗi lần spawn chọn ngẫu nhiên 1 trong 20 texture.
  */
 
 export class Rock {
-  /**
-   * @param {Phaser.Scene} scene
-   */
   constructor(scene) {
     this.scene = scene;
     this.active = false;
+    this._currentVariant = 0;
 
-    // ── Vẽ đá bằng Graphics (tạo 1 lần, không thay đổi) ──
-    const g = scene.add.graphics();
-
-    // Đá nền (đậm)
-    g.fillStyle(0x607d8b);
-    g.fillRoundedRect(-18, -13, 36, 26, 9);
-
-    // Đá giữa (sáng hơn)
-    g.fillStyle(0x78909c);
-    g.fillRoundedRect(-13, -9, 26, 18, 7);
-
-    // Highlights
-    g.fillStyle(0x90a4ae);
-    g.fillRoundedRect(-7, -5, 10, 7, 3);
+    // ── Sprite (khởi tạo với biến thể đầu, spawn sẽ đổi) ──
+    // Dùng texture thật từ assets/da/ — kiểm tra texture tồn tại
+    const texKey = scene.textures.exists('rock-1') ? 'rock-1' : '__DEFAULT';
+    this.sprite = scene.add.sprite(0, 0, texKey);
+    this.sprite.setOrigin(0.5);
 
     // ── Container ──
-    this.container = scene.add.container(0, 0, [g]);
-    this.container.setSize(36, 26);
+    this.container = scene.add.container(0, 0, [this.sprite]);
+    // Hitbox động theo kích thước sprite thực tế
+    this.container.setSize(120, 80);
     this.container.setDepth(1);
     this.container.setVisible(false);
   }
 
   /**
    * Hiển thị tại vị trí (x, y) — phía trên màn hình
+   * Chọn ngẫu nhiên 1 trong 20 biến thể đá.
    */
   spawn(x, y) {
+    // Random biến thể đá (1-20), tránh trùng với lần trước
+    const ROCK_COUNT = 20;
+    let variant;
+    do {
+      variant = Math.floor(Math.random() * ROCK_COUNT) + 1;
+    } while (variant === this._currentVariant && ROCK_COUNT > 1);
+    this._currentVariant = variant;
+
+    // Áp dụng texture — nếu chưa load được thì texture cũ được giữ nguyên
+    const texKey = `rock-${variant}`;
+    if (this.scene.textures.exists(texKey)) {
+      this.sprite.setTexture(texKey);
+    }
+
     this.container.setPosition(x, y);
     this.container.setVisible(true);
     this.active = true;

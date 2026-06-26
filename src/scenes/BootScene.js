@@ -59,6 +59,11 @@ export class BootScene extends Phaser.Scene {
     this.load.image('tree-g-4', 'assets/cay-thong/gay/g04.png');
     this.load.image('tree-g-5', 'assets/cay-thong/gay/g05.png');
 
+    // ── Rock textures (20 biến thể ngẫu nhiên) ──
+    for (let i = 1; i <= 20; i++) {
+      this.load.image(`rock-${i}`, `assets/da/d${i}.png`);
+    }
+
     // ── Map textures (3 màn chơi) ──
     this.load.image('map-snow-1', 'assets/map/ver1/map.png');
     this.load.image('map-snow-2', 'assets/map/ver2/map.png');
