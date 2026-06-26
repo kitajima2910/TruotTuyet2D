@@ -6,6 +6,16 @@
  * Mỗi lần spawn chọn ngẫu nhiên 1 trong 20 texture.
  */
 
+// Kích thước phần nhìn thấy được (visible content) của từng biến thể đá
+// Đo từ pixel data — hitbox khớp chính xác phần đá thực tế, tránh transparent padding
+const ROCK_VISIBLE = {
+  1:{w:186,h:118}, 2:{w:224,h:138}, 3:{w:226,h:118}, 4:{w:184,h:156},
+  5:{w:230,h:132}, 6:{w:181,h:158}, 7:{w:242,h:94},  8:{w:219,h:140},
+  9:{w:226,h:112}, 10:{w:220,h:150}, 11:{w:240,h:110}, 12:{w:207,h:150},
+  13:{w:212,h:126}, 14:{w:218,h:138}, 15:{w:229,h:108}, 16:{w:216,h:124},
+  17:{w:227,h:140}, 18:{w:225,h:116}, 19:{w:242,h:122}, 20:{w:228,h:132},
+};
+
 export class Rock {
   constructor(scene) {
     this.scene = scene;
@@ -13,14 +23,13 @@ export class Rock {
     this._currentVariant = 0;
 
     // ── Sprite (khởi tạo với biến thể đầu, spawn sẽ đổi) ──
-    // Dùng texture thật từ assets/da/ — kiểm tra texture tồn tại
     const texKey = scene.textures.exists('rock-1') ? 'rock-1' : '__DEFAULT';
     this.sprite = scene.add.sprite(0, 0, texKey);
     this.sprite.setOrigin(0.5);
 
     // ── Container ──
     this.container = scene.add.container(0, 0, [this.sprite]);
-    // Hitbox động theo kích thước sprite thực tế
+    // Hitbox tạm, spawn() sẽ set đúng theo variant
     this.container.setSize(120, 80);
     this.container.setDepth(1);
     this.container.setVisible(false);
@@ -29,9 +38,9 @@ export class Rock {
   /**
    * Hiển thị tại vị trí (x, y) — phía trên màn hình
    * Chọn ngẫu nhiên 1 trong 20 biến thể đá.
+   * Hitbox tự động khớp với phần nhìn thấy của biến thể đó.
    */
   spawn(x, y) {
-    // Random biến thể đá (1-20), tránh trùng với lần trước
     const ROCK_COUNT = 20;
     let variant;
     do {
@@ -39,11 +48,15 @@ export class Rock {
     } while (variant === this._currentVariant && ROCK_COUNT > 1);
     this._currentVariant = variant;
 
-    // Áp dụng texture — nếu chưa load được thì texture cũ được giữ nguyên
+    // Áp dụng texture
     const texKey = `rock-${variant}`;
     if (this.scene.textures.exists(texKey)) {
       this.sprite.setTexture(texKey);
     }
+
+    // Hitbox động theo kích thước visible của variant này
+    const v = ROCK_VISIBLE[variant];
+    this.container.setSize(v.w, v.h);
 
     this.container.setPosition(x, y);
     this.container.setVisible(true);
