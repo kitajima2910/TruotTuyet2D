@@ -4,11 +4,10 @@
  * Hỗ trợ 3 màn chơi (level 1-3) với map và độ khó khác nhau.
  * Nhận level qua this.scene.start('PlayScene', { level: 2 }).
  *
- * Mỗi level tăng dần scrollSpeed, giảm spawnInterval,
- * tăng pool size → thử thách hơn.
- *
- * Chỉ khởi tạo Terrain + InputSystem + Player + SpawnSystem + CollisionSystem + ScoreSystem.
- * Gọi update() mỗi frame — KHÔNG chứa logic spawn, random hay recycle.
+ * Tích hợp:
+ *   • DifficultySystem — tăng scrollSpeed, giảm spawnInterval, tăng density
+ *   • Boost — trạng thái tăng tốc tạm thời, refresh khi nhặt thêm
+ *   • Coin — thu thập xu, hiển thị trong HUD
  */
 
 import { InputSystem } from '../systems/InputSystem.js';
@@ -17,6 +16,7 @@ import { Tree } from '../entities/Tree.js';
 import { SpawnSystem } from '../systems/SpawnSystem.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { ScoreSystem } from '../systems/ScoreSystem.js';
+import { DifficultySystem } from '../systems/DifficultySystem.js';
 
 // ── Cấu hình độ khó theo level ──
 const LEVEL_CONFIG = {
@@ -49,6 +49,10 @@ const LEVEL_CONFIG = {
   },
 };
 
+// ── Cấu hình Boost ──
+const BOOST_DURATION = 5000;   // ms — thời lượng tăng tốc
+const BOOST_MULTIPLIER = 1.5;  // hệ số nhân tốc độ khi boost
+
 export class PlayScene extends Phaser.Scene {
   constructor() {
     super({ key: 'PlayScene' });
@@ -68,25 +72,29 @@ export class PlayScene extends Phaser.Scene {
 
     // ── Trạng thái game ──
     this._isDead = false;
-    this._lives = 3;              // 3 mạng
-    this._invincible = false;     // trạng thái bất tử sau khi trúng đòn
-    this._invincibleTimer = 0;    // đếm ngược thời gian bất tử (ms)
+    this._lives = 3;
+    this._invincible = false;
+    this._invincibleTimer = 0;
 
-    // ── Biến scrollSpeed dùng chung cho terrain + obstacles ──
+    // ── Boost state ──
+    this._boosted = false;
+    this._boostTimer = 0;
+
+    // ── Biến scrollSpeed dùng chung ──
     this.scrollSpeed = cfg.scrollSpeed;
 
-    // ── Terrain (nền tuyết cuộn vô hạn) ──
+    // ── Terrain ──
     this._mapKey = cfg.mapKey;
     this._createTerrain();
 
     // ── InputSystem ──
     this._input = new InputSystem(this);
 
-    // ── Player (giữa màn hình, ¾ chiều cao) ──
+    // ── Player ──
     this._player = new Player(this, width / 2, height * 0.75);
     this._player.sprite.setDepth(10);
 
-    // ── SpawnSystem (object pool Tree + Rock) ──
+    // ── SpawnSystem (object pools: Tree + Rock + Coin + Boost) ──
     this._spawnSystem = new SpawnSystem(this, {
       scrollSpeed: this.scrollSpeed,
       treePoolSize: cfg.treePoolSize,
@@ -94,20 +102,51 @@ export class PlayScene extends Phaser.Scene {
       spawnInterval: cfg.spawnInterval,
       minGapX: cfg.minGapX,
       playerSafeZone: cfg.playerSafeZone,
+      coinPoolSize: 10,
+      boostPoolSize: 5,
+      coinSpawnInterval: 800,
+      boostSpawnInterval: 4000,
+      obstacleDensity: 1,
     });
 
-    // ── CollisionSystem (AABB check) ──
+    // ── CollisionSystem ──
     this._collisionSystem = new CollisionSystem();
 
-    // ── ScoreSystem (điểm + best score) ──
+    // ── ScoreSystem (điểm + best score + coin count) ──
     this._scoreSystem = new ScoreSystem();
 
-    // ── Launch UI scene (HUD overlay) — chỉ hiện khi đang chơi ──
+    // ── DifficultySystem (tăng độ khó theo quãng đường) ──
+    this._difficultySystem = new DifficultySystem({
+      baseScrollSpeed: cfg.scrollSpeed,
+      baseSpawnInterval: cfg.spawnInterval,
+    });
+
+    // ── Text hiển thị xu (HUD trong PlayScene) ──
+    this._coinText = this.add.text(width - 20, 56, 'XU: 0', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '22px',
+      fontStyle: 'bold',
+      color: '#ffd700',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(1, 0).setDepth(100);
+
+    // ── Text indicator Boost (ẩn, chỉ hiện khi đang tăng tốc) ──
+    this._boostText = this.add.text(width / 2, 80, 'TANG TOC', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '22px',
+      fontStyle: 'bold',
+      color: '#00ff88',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(100).setVisible(false);
+
+    // ── Launch UI scene ──
     if (!this.scene.isActive('UIScene')) {
       this.scene.launch('UIScene', { level: this._level });
     }
 
-    // ── Gửi trạng thái ban đầu cho UI (delay 1 frame để UIScene kịp create) ──
+    // ── Gửi trạng thái ban đầu cho UI ──
     this.time.delayedCall(0, () => {
       this.game.events.emit('livesUpdate', this._lives);
       this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
@@ -115,43 +154,53 @@ export class PlayScene extends Phaser.Scene {
   }
 
   update(_time, delta) {
-    // Nếu đã chết → dừng mọi logic
     if (this._isDead) return;
 
     // 0. Cập nhật trạng thái bất tử
     this._updateInvincibility(delta);
 
-    // 1. Đọc input
+    // 1. Tính độ khó dựa trên quãng đường hiện tại
+    const diff = this._difficultySystem.update(this._scoreSystem.getScore());
+
+    // 2. Cập nhật boost timer
+    this._updateBoost(delta);
+
+    // 3. Tính scrollSpeed hiệu dụng (có nhân boost nếu đang active)
+    const effectiveSpeed = this._boosted
+      ? diff.scrollSpeed * BOOST_MULTIPLIER
+      : diff.scrollSpeed;
+    this.scrollSpeed = effectiveSpeed;
+
+    // 4. Đồng bộ tham số xuống SpawnSystem
+    this._spawnSystem.scrollSpeed = effectiveSpeed;
+    this._spawnSystem.spawnInterval = diff.spawnInterval;
+    this._spawnSystem.obstacleDensity = diff.obstacleDensity;
+
+    // 5. Đọc input
     this._input.update();
 
-    // 2. Cập nhật player
+    // 6. Cập nhật player
     const inputState = this._input.getState();
     this._player.update(delta, inputState);
 
-    // 3. Cuộn nền tuyết
+    // 7. Cuộn nền tuyết
     this._updateTerrain(delta);
 
-    // 4. Cập nhật SpawnSystem (spawn / di chuyển / recycle)
+    // 8. Cập nhật SpawnSystem (spawn / di chuyển / recycle)
     const { x: playerX } = this._player.getPosition();
     this._spawnSystem.update(delta, playerX);
 
-    // 5. Kiểm tra va chạm AABB (chỉ khi không bất tử)
+    // 9. Kiểm tra va chạm obstacle (chỉ khi không bất tử)
     if (!this._invincible) {
       const { obstacle } = this._collisionSystem.check(
         this._player,
         this._spawnSystem._active,
       );
       if (obstacle) {
-        // Kiểm tra trước: đây có phải cú đánh chí mạng không?
         const isFatal = this._lives <= 1;
-
-        // Cả Tree và Rock đều gây sát thương cho player
         this._handleHit();
-
-        // Nếu là Tree: cập nhật trạng thái animation
         if (obstacle instanceof Tree) {
           if (isFatal) {
-            // Cú chí mạng → force cây thành gãy đổ ngay lập tức
             obstacle.forceBroken();
           } else {
             obstacle.onHit();
@@ -160,38 +209,90 @@ export class PlayScene extends Phaser.Scene {
       }
     }
 
-    // 6. Cập nhật điểm
-    this._scoreSystem.update(this.scrollSpeed, delta);
+    // 10. Kiểm tra va chạm collectibles (luôn luôn, kể cả khi bất tử)
+    const { coin, boost } = this._collisionSystem.checkCollectibles(
+      this._player,
+      this._spawnSystem._activeCoins,
+      this._spawnSystem._activeBoosts,
+    );
 
-    // 7. Gửi điểm về UI mỗi frame
+    if (coin) {
+      coin.recycle();
+      // Xoá khỏi activeCoins
+      const idx = this._spawnSystem._activeCoins.indexOf(coin);
+      if (idx !== -1) this._spawnSystem._activeCoins.splice(idx, 1);
+      this._scoreSystem.addCoin();
+    }
+
+    if (boost) {
+      boost.recycle();
+      const idx = this._spawnSystem._activeBoosts.indexOf(boost);
+      if (idx !== -1) this._spawnSystem._activeBoosts.splice(idx, 1);
+      this._activateBoost();
+    }
+
+    // 11. Cập nhật điểm
+    this._scoreSystem.update(effectiveSpeed, delta);
+
+    // 12. Gửi điểm về UI
     this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
+
+    // 13. Cập nhật text xu
+    this._coinText.setText(`XU: ${this._scoreSystem.getCoinCount()}`);
+  }
+
+  // ══════════════════════════════════════════════
+  //  BOOST
+  // ══════════════════════════════════════════════
+
+  /**
+   * Kích hoạt trạng thái tăng tốc.
+   * Nếu đang trong boost → refresh thời gian.
+   */
+  _activateBoost() {
+    this._boosted = true;
+    this._boostTimer = BOOST_DURATION;
+    this._boostText.setVisible(true);
+
+    // Đổi tint Player sang xanh nhẹ để nhận biết
+    this._player.sprite.setTint(0xaaffaa);
   }
 
   /**
-   * Cập nhật trạng thái bất tử (invincibility frames)
-   * Player nhấp nháy trong thời gian bất tử
+   * Cập nhật boost timer mỗi frame.
+   * Hết thời gian → tắt boost.
    * @param {number} delta — ms
    */
+  _updateBoost(delta) {
+    if (!this._boosted) return;
+
+    this._boostTimer -= delta;
+    if (this._boostTimer <= 0) {
+      this._boosted = false;
+      this._boostTimer = 0;
+      this._boostText.setVisible(false);
+      this._player.sprite.clearTint();
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  //  INVINCIBILITY
+  // ══════════════════════════════════════════════
+
   _updateInvincibility(delta) {
     if (!this._invincible) return;
 
     this._invincibleTimer -= delta;
     if (this._invincibleTimer <= 0) {
       this._invincible = false;
-      this._player.sprite.setAlpha(1); // khôi phục độ trong suốt
+      this._player.sprite.setAlpha(1);
       return;
     }
 
-    // Nhấp nháy (blink) mỗi 100ms
     const blink = Math.floor(this._invincibleTimer / 100) % 2 === 0;
     this._player.sprite.setAlpha(blink ? 0.3 : 1);
   }
 
-  /**
-   * Xử lý khi Player va chạm vật cản
-   * - Còn mạng → giảm tim, bất tử tạm thời, reset vị trí
-   * - Hết mạng → game over
-   */
   _handleHit() {
     this._lives--;
     this.game.events.emit('livesUpdate', this._lives);
@@ -204,40 +305,33 @@ export class PlayScene extends Phaser.Scene {
     }
   }
 
-  /** Vào trạng thái bất tử (nhấp nháy 2 giây) */
   _enterInvincible() {
     this._invincible = true;
-    this._invincibleTimer = 2000; // 2 giây bất tử
+    this._invincibleTimer = 2000;
 
-    // Reset player về giữa màn hình, xoá animation ngã
     const { width, height } = this.scale;
     this._player.respawn(width / 2, height * 0.75);
   }
 
-  /**
-   * Xử lý chết thật sự — hết mạng
-   * - Dừng di chuyển + spawning
-   * - Chạy animation va chạm của player
-   * - Cây cuối cùng bị đụng đã tự chuyển thành tree-broken (gay)
-   * - Sau animation → delay → GameOverScene
-   */
   _handleDeath() {
     this._isDead = true;
     this._invincible = false;
     this._player.sprite.setAlpha(1);
-
-    // Dừng velocity
     this._player.velocityX = 0;
 
-    // Chạy animation va chạm
+    // Tắt boost nếu đang có
+    this._boosted = false;
+    this._boostText.setVisible(false);
+    this._player.sprite.clearTint();
+
     this._player.sprite.play('player-collision');
 
-    // Khi animation kết thúc → delay 1.5s rồi chuyển scene
     this._player.sprite.once('animationcomplete', () => {
       this.time.delayedCall(1500, () => {
         this._scoreSystem.saveBestScore();
         this.scene.start('GameOverScene', {
           score: this._scoreSystem.getScore(),
+          coins: this._scoreSystem.getCoinCount(),
           bestScore: this._scoreSystem.getBestScore(),
           level: this._level,
         });
@@ -246,29 +340,20 @@ export class PlayScene extends Phaser.Scene {
   }
 
   // ══════════════════════════════════════════════
-  //  TERRAIN — Parallax multi-layer infinite map
+  //  TERRAIN
   // ══════════════════════════════════════════════
 
-  /**
-   * Tạo 3 lớp nền cuộn parallax:
-   * L1 — Nền xa (distant mountains):  chậm nhất → hiệu ứng xa, tint lạnh
-   * L2 — Trung cảnh (mid-ground):      tốc độ vừa
-   * L3 — Tiền cảnh (foreground):       nhanh nhất → hiệu ứng gần, sáng rõ
-   */
   _createTerrain() {
     const { width, height } = this.scale;
 
-    // Lấy kích thước ảnh gốc
     const tex = this.textures.get(this._mapKey);
     const src = tex.getSourceImage();
     const imgW = src.width;
     const imgH = src.height;
 
-    // Tính base scale để ảnh fit đầy chiều rộng màn hình
     this._tileScaleX = width / imgW;
-    this._tileScaleY = this._tileScaleX; // giữ nguyên tỉ lệ
+    this._tileScaleY = this._tileScaleX;
 
-    // Layer 1 — Nền xa: scale nhỏ → xa, tint lạnh, chậm nhất
     this._layerFar = this.add.tileSprite(
       width / 2, height / 2, width, height, this._mapKey,
     );
@@ -277,7 +362,6 @@ export class PlayScene extends Phaser.Scene {
     this._layerFar.tileScaleX = this._tileScaleX * 0.6;
     this._layerFar.tileScaleY = this._tileScaleY * 0.6;
 
-    // Layer 2 — Trung cảnh: tỉ lệ chuẩn, tốc độ vừa
     this._layerMid = this.add.tileSprite(
       width / 2, height / 2, width, height, this._mapKey,
     );
@@ -285,7 +369,6 @@ export class PlayScene extends Phaser.Scene {
     this._layerMid.tileScaleX = this._tileScaleX * 0.8;
     this._layerMid.tileScaleY = this._tileScaleY * 0.8;
 
-    // Layer 3 — Tiền cảnh: scale lớn → gần, sáng, nhanh nhất
     this._layerNear = this.add.tileSprite(
       width / 2, height / 2, width, height, this._mapKey,
     );
@@ -297,20 +380,12 @@ export class PlayScene extends Phaser.Scene {
     this._scrollY = 0;
   }
 
-  /**
-   * Cuộn 3 lớp nền với tốc độ khác nhau (parallax).
-   * Nền xa (far) chậm nhất ↔ tiền cảnh (near) nhanh nhất.
-   * @param {number} delta — ms kể từ frame trước
-   */
   _updateTerrain(delta) {
     const dt = delta / 1000;
     this._scrollY += this.scrollSpeed * dt;
 
-    // Layer 1 — far: chậm nhất (0.2×), chạy từ trên xuống dưới
     this._layerFar.tilePositionY = -(this._scrollY * 0.2) / this._layerFar.tileScaleY;
-    // Layer 2 — mid: trung bình (0.5×)
     this._layerMid.tilePositionY = -(this._scrollY * 0.5) / this._layerMid.tileScaleY;
-    // Layer 3 — near: nhanh nhất (1.0×) — khớp tốc độ vật cản
     this._layerNear.tilePositionY = -(this._scrollY * 1.0) / this._layerNear.tileScaleY;
   }
 
@@ -320,8 +395,7 @@ export class PlayScene extends Phaser.Scene {
     this._input.destroy();
     this._player.destroy();
     this._spawnSystem.destroy();
-    // CollisionSystem & ScoreSystem không giữ resource Phaser → không cần destroy
-    // Dừng UIScene nếu đang chạy
+
     if (this.scene.isActive('UIScene')) {
       this.scene.stop('UIScene');
     }

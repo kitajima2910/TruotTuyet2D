@@ -1,7 +1,7 @@
 /**
  * GameOverScene.js — Scene kết thúc game
- * Hiển thị điểm cuối cùng, best score và nút chơi lại.
- * Nhận score + bestScore từ PlayScene qua init(data).
+ * Hiển thị Distance Score, Coin Collected, Best Score và nút chơi lại.
+ * Nhận dữ liệu từ PlayScene qua init(data).
  */
 
 export class GameOverScene extends Phaser.Scene {
@@ -11,10 +11,11 @@ export class GameOverScene extends Phaser.Scene {
 
   /**
    * Nhận dữ liệu từ PlayScene
-   * @param {{ score: number, bestScore: number, level: number }} data
+   * @param {{ score: number, coins: number, bestScore: number, level: number }} data
    */
   init(data) {
     this._score = data?.score ?? 0;
+    this._coins = data?.coins ?? 0;
     this._bestScore = data?.bestScore ?? 0;
     this._level = data?.level ?? 1;
   }
@@ -32,7 +33,7 @@ export class GameOverScene extends Phaser.Scene {
     this.add.rectangle(centerX, height / 2, width, height, 0x000000, 0.6);
 
     // ── KẾT THÚC title ──
-    this.add.text(centerX, height * 0.28, 'KẾT THÚC', {
+    this.add.text(centerX, height * 0.20, 'KẾT THÚC', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '72px',
       fontStyle: 'bold',
@@ -41,26 +42,34 @@ export class GameOverScene extends Phaser.Scene {
       strokeThickness: 6,
     }).setOrigin(0.5);
 
-    // ── Điểm hiện tại ──
-    this.add.text(centerX, height * 0.42, `ĐIỂM: ${this._score}`, {
+    // ── Khoảng cách (Distance Score) ──
+    this.add.text(centerX, height * 0.36, `KHOẢNG CÁCH: ${this._score}`, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '40px',
+      fontSize: '36px',
       fontStyle: 'bold',
       color: '#ecf0f1',
     }).setOrigin(0.5);
 
-    // ── Điểm cao nhất ──
-    this.add.text(centerX, height * 0.50, `CAO NHẤT: ${this._bestScore}`, {
+    // ── Xu thu thập (Coin Collected) ──
+    this.add.text(centerX, height * 0.44, `XU THU THẬP: ${this._coins}`, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '30px',
+      fontSize: '28px',
+      fontStyle: 'bold',
+      color: '#ffd700',
+    }).setOrigin(0.5);
+
+    // ── Điểm cao nhất (Best Score) ──
+    this.add.text(centerX, height * 0.52, `CAO NHẤT: ${this._bestScore}`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '26px',
       color: '#f1c40f',
     }).setOrigin(0.5);
 
     // ── Nút Chơi lại ──
-    this._createRetryButton(centerX, height * 0.62);
+    this._createRetryButton(centerX, height * 0.64);
 
     // ── Nút về Menu ──
-    this._createMenuButton(centerX, height * 0.72);
+    this._createMenuButton(centerX, height * 0.74);
   }
 
   _createRetryButton(x, y) {

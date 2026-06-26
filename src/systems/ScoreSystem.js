@@ -11,6 +11,7 @@ export class ScoreSystem {
   constructor() {
     this._score = 0;
     this._bestScore = this._loadBestScore();
+    this._coinCount = 0;
   }
 
   /**
@@ -23,7 +24,7 @@ export class ScoreSystem {
     this._score += scrollSpeed * dt;
   }
 
-  /** Lấy điểm hiện tại (làm tròn nguyên) */
+  /** Lấy điểm hiện tại (làm tròn nguyên) — Distance Score */
   getScore() {
     return Math.floor(this._score);
   }
@@ -31,6 +32,16 @@ export class ScoreSystem {
   /** Lấy best score */
   getBestScore() {
     return this._bestScore;
+  }
+
+  /** Cộng dồn số xu đã thu thập */
+  addCoin() {
+    this._coinCount++;
+  }
+
+  /** Lấy số xu đã thu thập */
+  getCoinCount() {
+    return this._coinCount;
   }
 
   /**

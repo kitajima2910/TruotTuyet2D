@@ -27,7 +27,6 @@ export class CollisionSystem {
     for (const obstacle of activeObstacles) {
       if (!obstacle.active) continue;
 
-      // Container bounds tính manual từ container.x/y + setSize
       const c = obstacle.container;
       const hw = c.width / 2;
       const hh = c.height / 2;
@@ -44,5 +43,57 @@ export class CollisionSystem {
     }
 
     return { obstacle: null };
+  }
+
+  /**
+   * Kiểm tra va chạm giữa Player và collectibles (Coin / Boost).
+   * Dùng chung AABB, trả về coin hoặc boost đầu tiên trúng.
+   * @param {Player} player
+   * @param {Array} activeCoins — mảng Coin đang active
+   * @param {Array} activeBoosts — mảng Boost đang active
+   * @returns {{ coin: object|null, boost: object|null }}
+   */
+  checkCollectibles(player, activeCoins, activeBoosts) {
+    const pb = player.getHitbox();
+
+    // ── Check Coin ──
+    for (const coin of activeCoins) {
+      if (!coin.active) continue;
+
+      const c = coin.container;
+      const hw = c.width / 2;
+      const hh = c.height / 2;
+      const cb = new Phaser.Geom.Rectangle(
+        c.x - hw,
+        c.y - hh,
+        c.width,
+        c.height,
+      );
+
+      if (Phaser.Geom.Intersects.RectangleToRectangle(pb, cb)) {
+        return { coin, boost: null };
+      }
+    }
+
+    // ── Check Boost ──
+    for (const boost of activeBoosts) {
+      if (!boost.active) continue;
+
+      const c = boost.container;
+      const hw = c.width / 2;
+      const hh = c.height / 2;
+      const bb = new Phaser.Geom.Rectangle(
+        c.x - hw,
+        c.y - hh,
+        c.width,
+        c.height,
+      );
+
+      if (Phaser.Geom.Intersects.RectangleToRectangle(pb, bb)) {
+        return { coin: null, boost };
+      }
+    }
+
+    return { coin: null, boost: null };
   }
 }
