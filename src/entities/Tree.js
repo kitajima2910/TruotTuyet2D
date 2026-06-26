@@ -1,8 +1,12 @@
 /**
- * Tree.js — Vật cản cây thông
+ * Tree.js — Vật cản cây thông (sprite + animation + 3 lives)
  *
- * Vẽ bằng Graphics (thân + tán lá), không tạo texture mới.
- * Hỗ trợ object pool: spawn / recycle / tái sử dụng.
+ * Trạng thái:
+ *   3 lives → tree-idle  (dung-yen: đứng yên)
+ *   1-2 lives → tree-wobble (lung-lay: rung lắc sau va chạm)
+ *   0 lives → tree-broken (gay: gãy đổ, play 1 lần rồi recycle)
+ *
+ * Hỗ trợ object pool: spawn / onHit / recycle.
  */
 
 export class Tree {
@@ -12,25 +16,16 @@ export class Tree {
   constructor(scene) {
     this.scene = scene;
     this.active = false;
+    this._lives = 3;
 
-    // ── Vẽ cây bằng Graphics (tạo 1 lần, không thay đổi) ──
-    const g = scene.add.graphics();
-
-    // Thân gỗ
-    g.fillStyle(0x6d4c2e);
-    g.fillRect(-5, 0, 10, 28);
-
-    // Tán lá dưới (rộng)
-    g.fillStyle(0x2e7d32);
-    g.fillTriangle(0, -8, -20, 8, 20, 8);
-
-    // Tán lá trên (nhọn)
-    g.fillStyle(0x388e3c);
-    g.fillTriangle(0, -32, -15, -2, 15, -2);
+    // ── Sprite (thay Graphics) ──
+    this.sprite = scene.add.sprite(0, 0, 'tree-dy-1');
+    this.sprite.setOrigin(0.5);
 
     // ── Container ──
-    this.container = scene.add.container(0, 0, [g]);
-    this.container.setSize(40, 60);
+    this.container = scene.add.container(0, 0, [this.sprite]);
+    // sprite 171×113 → hitbox gọn 120×80 cho collision công bằng
+    this.container.setSize(120, 80);
     this.container.setDepth(1);
     this.container.setVisible(false);
   }
@@ -39,17 +34,38 @@ export class Tree {
    * Hiển thị tại vị trí (x, y) — phía trên màn hình
    */
   spawn(x, y) {
+    this._lives = 3;
     this.container.setPosition(x, y);
     this.container.setVisible(true);
     this.active = true;
+    this.sprite.play('tree-idle');
   }
 
   /**
-   * Ẩn đi, đánh dấu inactive để pool tái sử dụng
+   * Gọi khi Player va chạm vào cây này.
+   * Giảm 1 mạng, chuyển animation phù hợp.
+   * @returns {{ destroyed: boolean }} — true nếu cây bị phá huỷ (lives ≤ 0)
    */
-  recycle() {
-    this.container.setVisible(false);
-    this.active = false;
+  onHit() {
+    this._lives--;
+
+    if (this._lives <= 0) {
+      // Lần cuối → gãy đổ, KHÔNG tự recycle (scene sẽ dọn khi chuyển)
+      this.sprite.play('tree-broken');
+      return { destroyed: true };
+    }
+
+    // Còn sống → rung lắc
+    this.sprite.play('tree-wobble');
+    return { destroyed: false };
+  }
+
+  /**
+   * Force cây thành trạng thái gãy đổ ngay — gọi khi player chết vì cây này.
+   * Bất kể _lives còn bao nhiêu, cây sẽ play tree-broken.
+   */
+  forceBroken() {
+    this.sprite.play('tree-broken');
   }
 
   /**
@@ -63,10 +79,11 @@ export class Tree {
   }
 
   /**
-   * Lấy bounds trùng khung (dùng cho debug / collision sau)
+   * Ẩn đi, đánh dấu inactive để pool tái sử dụng
    */
-  getBounds() {
-    return this.container.getBounds();
+  recycle() {
+    this.container.setVisible(false);
+    this.active = false;
   }
 
   /** Destroy khi scene stop */

@@ -35,6 +35,30 @@ export class BootScene extends Phaser.Scene {
     this.load.image('player-vc-4', 'assets/player/va-cham/v4.png');
     this.load.image('player-vc-5', 'assets/player/va-cham/v5.png');
 
+    // ── Tree frames (cây thông) ──
+    // dung-yen (đứng yên)
+    this.load.image('tree-dy-1', 'assets/cay-thong/dung-yen/dy01.png');
+    this.load.image('tree-dy-2', 'assets/cay-thong/dung-yen/dy02.png');
+    this.load.image('tree-dy-3', 'assets/cay-thong/dung-yen/dy03.png');
+    this.load.image('tree-dy-4', 'assets/cay-thong/dung-yen/dy04.png');
+    this.load.image('tree-dy-5', 'assets/cay-thong/dung-yen/dy05.png');
+    this.load.image('tree-dy-6', 'assets/cay-thong/dung-yen/dy06.png');
+
+    // lung-lay (rung lắc khi va chạm)
+    this.load.image('tree-ll-1', 'assets/cay-thong/lung-lay/ll01.png');
+    this.load.image('tree-ll-2', 'assets/cay-thong/lung-lay/ll02.png');
+    this.load.image('tree-ll-3', 'assets/cay-thong/lung-lay/ll03.png');
+    this.load.image('tree-ll-4', 'assets/cay-thong/lung-lay/ll04.png');
+    this.load.image('tree-ll-5', 'assets/cay-thong/lung-lay/ll05.png');
+    this.load.image('tree-ll-6', 'assets/cay-thong/lung-lay/ll06.png');
+
+    // gay (gãy đổ — lần va chạm cuối)
+    this.load.image('tree-g-1', 'assets/cay-thong/gay/g01.png');
+    this.load.image('tree-g-2', 'assets/cay-thong/gay/g02.png');
+    this.load.image('tree-g-3', 'assets/cay-thong/gay/g03.png');
+    this.load.image('tree-g-4', 'assets/cay-thong/gay/g04.png');
+    this.load.image('tree-g-5', 'assets/cay-thong/gay/g05.png');
+
     // ── Map textures (3 màn chơi) ──
     this.load.image('map-snow-1', 'assets/map/ver1/map.png');
     this.load.image('map-snow-2', 'assets/map/ver2/map.png');
@@ -94,6 +118,48 @@ export class BootScene extends Phaser.Scene {
         { key: 'player-vc-5' },
       ],
       frameRate: 10,
+      repeat: 0, // chỉ play 1 lần
+    });
+
+    // ── Tạo animations cho Tree ──
+    this.anims.create({
+      key: 'tree-idle',
+      frames: [
+        { key: 'tree-dy-1' },
+        { key: 'tree-dy-2' },
+        { key: 'tree-dy-3' },
+        { key: 'tree-dy-4' },
+        { key: 'tree-dy-5' },
+        { key: 'tree-dy-6' },
+      ],
+      frameRate: 8,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'tree-wobble',
+      frames: [
+        { key: 'tree-ll-1' },
+        { key: 'tree-ll-2' },
+        { key: 'tree-ll-3' },
+        { key: 'tree-ll-4' },
+        { key: 'tree-ll-5' },
+        { key: 'tree-ll-6' },
+      ],
+      frameRate: 10,
+      repeat: -1, // lặp trong suốt thời gian lung lay
+    });
+
+    this.anims.create({
+      key: 'tree-broken',
+      frames: [
+        { key: 'tree-g-1' },
+        { key: 'tree-g-2' },
+        { key: 'tree-g-3' },
+        { key: 'tree-g-4' },
+        { key: 'tree-g-5' },
+      ],
+      frameRate: 8,
       repeat: 0, // chỉ play 1 lần
     });
 

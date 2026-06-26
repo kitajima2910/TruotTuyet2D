@@ -13,6 +13,7 @@
 
 import { InputSystem } from '../systems/InputSystem.js';
 import { Player } from '../entities/Player.js';
+import { Tree } from '../entities/Tree.js';
 import { SpawnSystem } from '../systems/SpawnSystem.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { ScoreSystem } from '../systems/ScoreSystem.js';
@@ -136,12 +137,26 @@ export class PlayScene extends Phaser.Scene {
 
     // 5. Kiểm tra va chạm AABB (chỉ khi không bất tử)
     if (!this._invincible) {
-      const { isPlayerDead } = this._collisionSystem.check(
+      const { obstacle } = this._collisionSystem.check(
         this._player,
         this._spawnSystem._active,
       );
-      if (isPlayerDead) {
+      if (obstacle) {
+        // Kiểm tra trước: đây có phải cú đánh chí mạng không?
+        const isFatal = this._lives <= 1;
+
+        // Cả Tree và Rock đều gây sát thương cho player
         this._handleHit();
+
+        // Nếu là Tree: cập nhật trạng thái animation
+        if (obstacle instanceof Tree) {
+          if (isFatal) {
+            // Cú chí mạng → force cây thành gãy đổ ngay lập tức
+            obstacle.forceBroken();
+          } else {
+            obstacle.onHit();
+          }
+        }
       }
     }
 
@@ -202,7 +217,8 @@ export class PlayScene extends Phaser.Scene {
   /**
    * Xử lý chết thật sự — hết mạng
    * - Dừng di chuyển + spawning
-   * - Chạy animation va chạm
+   * - Chạy animation va chạm của player
+   * - Cây cuối cùng bị đụng đã tự chuyển thành tree-broken (gay)
    * - Sau animation → delay → GameOverScene
    */
   _handleDeath() {

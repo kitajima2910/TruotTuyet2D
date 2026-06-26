@@ -3,7 +3,7 @@
  *
  * So sánh bounding box của Player với tất cả vật cản đang active.
  * Không dùng Physics Engine — dùng manual AABB computation.
- * Trả về trạng thái isPlayerDead.
+ * Trả về obstacle đầu tiên bị va chạm (hoặc null).
  *
  * NOTE: Phaser Container.getBounds() không trả đúng bounds khi chứa Graphics
  * nên phải tính manually từ container.x/y + container.width/height (đã set qua setSize).
@@ -15,10 +15,11 @@ export class CollisionSystem {
   }
 
   /**
-   * Kiểm tra va chạm giữa Player và danh sách vật cản active
-   * @param {Player} player — instance Player (dùng getHitbox() thay vì getBounds())
+   * Kiểm tra va chạm giữa Player và danh sách vật cản active.
+   * Trả về obstacle đầu tiên bị trúng (Tree/Rock) hoặc null.
+   * @param {Player} player — instance Player (dùng getHitbox())
    * @param {Array} activeObstacles — mảng các Tree/Rock đang active (từ SpawnSystem._active)
-   * @returns {{ isPlayerDead: boolean }}
+   * @returns {{ obstacle: object|null }}
    */
   check(player, activeObstacles) {
     const pb = player.getHitbox();
@@ -26,7 +27,7 @@ export class CollisionSystem {
     for (const obstacle of activeObstacles) {
       if (!obstacle.active) continue;
 
-      // Container.getBounds() trả về zero với Graphics children → tính manual
+      // Container bounds tính manual từ container.x/y + setSize
       const c = obstacle.container;
       const hw = c.width / 2;
       const hh = c.height / 2;
@@ -38,10 +39,10 @@ export class CollisionSystem {
       );
 
       if (Phaser.Geom.Intersects.RectangleToRectangle(pb, ob)) {
-        return { isPlayerDead: true };
+        return { obstacle };
       }
     }
 
-    return { isPlayerDead: false };
+    return { obstacle: null };
   }
 }
