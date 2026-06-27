@@ -29,6 +29,11 @@ export class GameOverScene extends Phaser.Scene {
       this.scene.stop('UIScene');
     }
 
+    // ── Nền game over ──
+    this.add.image(width / 2, height / 2, 'gameover-bg')
+      .setDisplaySize(width, height)
+      .setDepth(-2);
+
     // Overlay tối
     this.add.rectangle(centerX, height / 2, width, height, 0x000000, 0.6);
 
