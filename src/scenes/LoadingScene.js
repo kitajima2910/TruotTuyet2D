@@ -66,13 +66,13 @@ export class LoadingScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    // Text phần trăm (dưới thanh loading)
+    // Text phần trăm (giữa thanh loading)
     const pctText = this.add
-      .text(centerX, barY + 22, '0%', {
+      .text(centerX, barY + barH / 2, '0%', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '14px',
         fontStyle: 'bold',
-        color: '#88bbff',
+        color: '#ffffff',
       })
       .setOrigin(0.5);
     this._pctText = pctText;
