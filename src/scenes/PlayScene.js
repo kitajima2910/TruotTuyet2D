@@ -309,12 +309,17 @@ export class PlayScene extends Phaser.Scene {
       }
     }
 
-    // 10. Collectibles
-    const { coin, boost } = this._collisionSystem.checkCollectibles(
-      this._player,
-      this._spawnSystem._activeCoins,
-      this._spawnSystem._activeBoosts,
-    );
+    // 10. Collectibles (bỏ qua khi đang nhảy — bay trên không không nhặt được)
+    let coin = null, boost = null;
+    if (!this._player.isJumping()) {
+      const result = this._collisionSystem.checkCollectibles(
+        this._player,
+        this._spawnSystem._activeCoins,
+        this._spawnSystem._activeBoosts,
+      );
+      coin = result.coin;
+      boost = result.boost;
+    }
 
     if (coin) {
       const cx = coin.container.x;
