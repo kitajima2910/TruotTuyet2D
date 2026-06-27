@@ -70,6 +70,11 @@ export class BootScene extends Phaser.Scene {
       this.load.image(`coin-${idx}`, `assets/coin/c${idx}.png`);
     }
 
+    // ── Boost-pad frames (7 frame glow) ──
+    for (let i = 1; i <= 7; i++) {
+      this.load.image(`boostpad-${i}`, `assets/boost-pad/bp${i}.png`);
+    }
+
     // ── Map textures (3 màn chơi) ──
     this.load.image('map-snow-1', 'assets/map/ver1/map.png');
     this.load.image('map-snow-2', 'assets/map/ver2/map.png');
@@ -143,6 +148,22 @@ export class BootScene extends Phaser.Scene {
       frames: coinFrames,
       frameRate: 12,
       repeat: -1,
+    });
+
+    // ── Tạo animation cho Boost-pad (7 frame glow) ──
+    this.anims.create({
+      key: 'boostpad-glow',
+      frames: [
+        { key: 'boostpad-1' },
+        { key: 'boostpad-2' },
+        { key: 'boostpad-3' },
+        { key: 'boostpad-4' },
+        { key: 'boostpad-5' },
+        { key: 'boostpad-6' },
+        { key: 'boostpad-7' },
+      ],
+      frameRate: 10,
+      repeat: 0, // chỉ play 1 lần khi player chạm
     });
 
     // ── Tạo animations cho Tree ──

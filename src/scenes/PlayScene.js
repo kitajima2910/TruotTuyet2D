@@ -141,7 +141,7 @@ export class PlayScene extends Phaser.Scene {
     }).setOrigin(1, 0).setDepth(100);
 
     // ── Text indicator Boost (ẩn, chỉ hiện khi đang tăng tốc) ──
-    this._boostText = this.add.text(width / 2, 80, 'TANG TOC', {
+    this._boostText = this.add.text(width / 2, 80, 'TĂNG TỐC', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '22px',
       fontStyle: 'bold',
@@ -240,10 +240,8 @@ export class PlayScene extends Phaser.Scene {
     }
 
     if (boost) {
-      boost.recycle();
-      const idx = this._spawnSystem._activeBoosts.indexOf(boost);
-      if (idx !== -1) this._spawnSystem._activeBoosts.splice(idx, 1);
-      this._activateBoost();
+      boost.trigger();           // play glow animation — KHÔNG recycle
+      this._activateBoost();     // kích hoạt hiệu ứng tăng tốc
     }
 
     // 11. Cập nhật điểm

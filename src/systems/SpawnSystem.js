@@ -248,18 +248,54 @@ export class SpawnSystem {
   }
 
   /**
-   * Spawn 1 Boost từ pool
+   * Spawn 1 Boost-pad từ pool
+   * Boost-pad là ground pad — spawn ở trung tâm màn hình,
+   * dễ với tới, không spawn ở rìa.
    * @param {number} playerX
    */
   _spawnBoost(playerX) {
     const boost = this._boostPool.find(b => !b.active);
     if (!boost) return;
 
-    const x = this._findCollectibleX(playerX);
+    const x = this._findBoostX(playerX);
     if (x === null) return;
 
     boost.spawn(x, -40);
     this._activeBoosts.push(boost);
+  }
+
+  /**
+   * Tìm vị trí X đẹp cho boost-pad — trung tâm màn hình,
+   * né obstacle nhưng gần player để dễ ăn.
+   * @returns {number|null}
+   */
+  _findBoostX(playerX) {
+    const { width } = this.scene.scale;
+    const margin = 80;                    // né rìa
+    const center = width / 2;
+    const range = width * 0.25;           // chỉ spawn trong 50% màn hình (trung tâm)
+    const minX = center - range;
+    const maxX = center + range;
+    const maxAttempts = 10;
+
+    for (let i = 0; i < maxAttempts; i++) {
+      const x = minX + Math.random() * (maxX - minX);
+
+      // Né obstacle — boost-pad không chồng lên vật cản
+      let overlap = false;
+      for (const obs of this._active) {
+        if (Math.abs(obs.container.x - x) < this.minGapX * 0.6) {
+          overlap = true;
+          break;
+        }
+      }
+      if (overlap) continue;
+
+      return x;
+    }
+
+    // fallback: ngay giữa màn hình
+    return center;
   }
 
   /**

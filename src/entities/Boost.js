@@ -1,10 +1,11 @@
 /**
- * Boost.js — Vật phẩm tăng tốc (collectible)
+ * Boost.js — Boost-pad trên đường đua
  *
- * Object pool pattern giống Tree/Rock:
- *   • Hình vuông xanh trong Container
- *   • Khi thu thập → kích hoạt trạng thái tăng tốc có thời lượng
- *   • Nhặt thêm → refresh thời gian
+ * Object pool pattern:
+ *   • Sprite boost-pad (bp1.png) — hiển thị ở chế độ chờ
+ *   • Khi player chạm → play animation boostpad-glow (bp1→bp7)
+ *   • KHÔNG biến mất khi chạm — chỉ recycle khi scroll ra khỏi màn hình
+ *   • Triggered flag ngăn kích hoạt lại
  */
 
 export class Boost {
@@ -14,14 +15,16 @@ export class Boost {
   constructor(scene) {
     this.scene = scene;
     this.active = false;
+    this._triggered = false;
 
-    // ── Vẽ vật phẩm tăng tốc (hình vuông xanh lá) ──
-    this.rect = scene.add.rectangle(0, 0, 26, 26, 0x00ff88);
-    this.rect.setStrokeStyle(2, 0x00cc66);
+    // ── Sprite boost-pad (mặc định hiển thị frame 1) ──
+    this.sprite = scene.add.sprite(0, 0, 'boostpad-1');
+    this.sprite.setOrigin(0.5);
+    this.sprite.setScale(0.38); // 179×427 → ~68×162, nhỉnh hơn player
 
     // ── Container ──
-    this.container = scene.add.container(0, 0, [this.rect]);
-    this.container.setSize(26, 26);
+    this.container = scene.add.container(0, 0, [this.sprite]);
+    this.container.setSize(68, 160);
     this.container.setDepth(2);
     this.container.setVisible(false);
   }
@@ -32,7 +35,18 @@ export class Boost {
   spawn(x, y) {
     this.container.setPosition(x, y);
     this.container.setVisible(true);
+    this.sprite.setTexture('boostpad-1');
     this.active = true;
+    this._triggered = false;
+  }
+
+  /**
+   * Kích hoạt animation glow khi player chạm vào
+   */
+  trigger() {
+    if (this._triggered) return;
+    this._triggered = true;
+    this.sprite.play('boostpad-glow');
   }
 
   /**
@@ -50,7 +64,9 @@ export class Boost {
    */
   recycle() {
     this.container.setVisible(false);
+    this.sprite.stop();
     this.active = false;
+    this._triggered = false;
   }
 
   /** Destroy khi scene stop */
