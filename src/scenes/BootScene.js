@@ -64,6 +64,12 @@ export class BootScene extends Phaser.Scene {
       this.load.image(`rock-${i}`, `assets/da/d${i}.png`);
     }
 
+    // ── Coin frames (16 frame xoay tròn) ──
+    for (let i = 0; i <= 15; i++) {
+      const idx = String(i).padStart(2, '0');
+      this.load.image(`coin-${idx}`, `assets/coin/c${idx}.png`);
+    }
+
     // ── Map textures (3 màn chơi) ──
     this.load.image('map-snow-1', 'assets/map/ver1/map.png');
     this.load.image('map-snow-2', 'assets/map/ver2/map.png');
@@ -124,6 +130,19 @@ export class BootScene extends Phaser.Scene {
       ],
       frameRate: 10,
       repeat: 0, // chỉ play 1 lần
+    });
+
+    // ── Tạo animation cho Coin (16 frame xoay tròn) ──
+    const coinFrames = [];
+    for (let i = 0; i <= 15; i++) {
+      const idx = String(i).padStart(2, '0');
+      coinFrames.push({ key: `coin-${idx}` });
+    }
+    this.anims.create({
+      key: 'coin-spin',
+      frames: coinFrames,
+      frameRate: 12,
+      repeat: -1,
     });
 
     // ── Tạo animations cho Tree ──

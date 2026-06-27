@@ -2,9 +2,8 @@
  * Coin.js — Xu thu thập (collectible)
  *
  * Object pool pattern giống Tree/Rock:
- *   • Hình tròn vàng trong Container
+ *   • Sprite với animation coin-spin trong Container
  *   • spawn → update (cuộn xuống) → recycle
- *   • KHÔNG dùng sprite, chỉ dùng Phaser.GameObjects.Arc
  */
 
 export class Coin {
@@ -15,13 +14,15 @@ export class Coin {
     this.scene = scene;
     this.active = false;
 
-    // ── Vẽ đồng xu (hình tròn vàng) ──
-    this.circle = scene.add.circle(0, 0, 15, 0xffd700);
-    this.circle.setStrokeStyle(2, 0xdaa520);
+    // ── Sprite đồng xu (animation xoay tròn) ──
+    this.sprite = scene.add.sprite(0, 0, 'coin-00');
+    this.sprite.setOrigin(0.5);
+    this.sprite.setScale(0.25); // nhỏ hơn player
 
     // ── Container ──
-    this.container = scene.add.container(0, 0, [this.circle]);
-    this.container.setSize(30, 30);
+    this.container = scene.add.container(0, 0, [this.sprite]);
+    // Hitbox thu hẹp sát visual — coin chỉ mất khi chạm thật sự
+    this.container.setSize(22, 22);
     this.container.setDepth(2);
     this.container.setVisible(false);
   }
@@ -33,6 +34,7 @@ export class Coin {
     this.container.setPosition(x, y);
     this.container.setVisible(true);
     this.active = true;
+    this.sprite.play('coin-spin');
   }
 
   /**
