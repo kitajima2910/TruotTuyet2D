@@ -20,16 +20,20 @@ const SNOW_BG = 0xe8f0fe; // Nền màu tuyết nhạt
  * @param {string|HTMLElement} parent — selector hoặc DOM element chứa game
  * @returns {Phaser.Game}
  */
-export function createGame(parent = 'game-container') {
+export function createGame(parentId = 'game-container') {
+  const parent = typeof parentId === 'string'
+    ? document.getElementById(parentId)
+    : parentId;
+
   const config = {
     type: Phaser.AUTO,
-    width: GAME_WIDTH,
-    height: GAME_HEIGHT,
     parent,
     backgroundColor: SNOW_BG,
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: GAME_WIDTH,
+      height: GAME_HEIGHT,
     },
     scene: [BootScene, MenuScene, PlayScene, UIScene, GameOverScene],
   };
