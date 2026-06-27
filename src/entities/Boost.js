@@ -25,7 +25,7 @@ export class Boost {
     // ── Container ──
     this.container = scene.add.container(0, 0, [this.sprite]);
     this.container.setSize(68, 160);
-    this.container.setDepth(2);
+    this.container.setDepth(0); // nằm dưới cùng khi overlay
     this.container.setVisible(false);
   }
 
