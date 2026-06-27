@@ -55,7 +55,7 @@ export class UIScene extends Phaser.Scene {
     this._hud.add(this._levelText);
 
     // Best Score (phải trên)
-    this._bestText = this.add.text(width - P, T, 'BEST: 0', {
+    this._bestText = this.add.text(width - P, T, 'CAO NHẤT: 0', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '15px',
       fontStyle: 'bold',
@@ -76,8 +76,8 @@ export class UIScene extends Phaser.Scene {
     }).setOrigin(0, 0);
     this._hud.add(this._scoreText);
 
-    // Coin Count (phải trên, dưới BEST)
-    this._coinText = this.add.text(width - P, T + 24, '🪙 0', {
+    // Coin Count (phải trên, dưới CAO NHẤT)
+    this._coinText = this.add.text(width - P, T + 24, 'XU: 0', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '20px',
       fontStyle: 'bold',
@@ -258,7 +258,7 @@ export class UIScene extends Phaser.Scene {
   /** @param {number} count */
   _onCoin(count) {
     if (this._coinText?.active) {
-      this._coinText.setText(`🪙 ${count}`);
+      this._coinText.setText(`XU: ${count}`);
     }
   }
 
@@ -295,7 +295,7 @@ export class UIScene extends Phaser.Scene {
   /** @param {number} score */
   _onBestScore(score) {
     if (this._bestText?.active) {
-      this._bestText.setText(`BEST: ${score}`);
+      this._bestText.setText(`CAO NHẤT: ${score}`);
     }
   }
 
