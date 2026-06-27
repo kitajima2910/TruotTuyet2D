@@ -25,28 +25,36 @@ export class Player {
     this.scene = scene;
 
     // ── Tuneable params ──
-    this.acceleration = 1200;   // px/s² — lực đẩy khi giữ nút
-    this.friction = 0.92;       // hệ số giảm tốc mỗi frame (0-1)
-    this.maxSpeed = 400;        // px/s — vận tốc cực đại
-    this.tiltAngle = 30;        // độ nghiêng khi di chuyển (degrees)
-    this.tiltSpeed = 6;         // tốc độ lerp rotation (cao = nhanh hơn)
+    this.acceleration = 1200; // px/s² — lực đẩy khi giữ nút
+    this.friction = 0.92; // hệ số giảm tốc mỗi frame (0-1)
+    this.maxSpeed = 400; // px/s — vận tốc cực đại
+    this.tiltAngle = 30; // độ nghiêng khi di chuyển (degrees)
+    this.tiltSpeed = 6; // tốc độ lerp rotation (cao = nhanh hơn)
+
+    // ── Jump params ──
+    this.jumpVelocity = -700; // px/s — vận tốc lên khi nhảy
+    this.gravity = 1200; // px/s² — gia tốc trọng trường
+    this.groundY = y; // vị trí Y mặt đất
+    this.velocityY = 0;
+    this._isJumping = false;
+    this._jumpPhase = null; // 'goingUp' | 'falling' | null
 
     // ── Collision hitbox (nhỏ hơn sprite, bỏ qua transparent padding) ──
-    this._hitboxW = 42;         // px — chiều rộng vùng va chạm thực tế
-    this._hitboxH = 64;         // px — chiều cao vùng va chạm thực tế
+    this._hitboxW = 42; // px — chiều rộng vùng va chạm thực tế
+    this._hitboxH = 64; // px — chiều cao vùng va chạm thực tế
 
     // ── Runtime state ──
     this.velocityX = 0;
-    this._currentAnim = null;   // track animation hiện tại
-    this._targetRotation = 0;   // rotation mục tiêu (radians)
+    this._currentAnim = null; // track animation hiện tại
+    this._targetRotation = 0; // rotation mục tiêu (radians)
 
     // ── Sprite (dùng sprite thay vì rectangle) ──
-    this.sprite = scene.add.sprite(x, y, 'player-tren-1');
+    this.sprite = scene.add.sprite(x, y, "player-tren-1");
     this.sprite.setOrigin(0.5);
 
     // ── Chạy animation mặc định (idle/tren) ──
-    this.sprite.play('player-idle');
-    this._currentAnim = 'player-idle';
+    this.sprite.play("player-idle");
+    this._currentAnim = "player-idle";
   }
 
   /**
@@ -88,7 +96,29 @@ export class Player {
       this.velocityX = 0;
     }
 
-    // ── Switch animation theo hướng di chuyển ──
+    // ── Jump / Gravity ──
+    if (this._isJumping) {
+      this.velocityY += this.gravity * dt;
+      this.sprite.y += this.velocityY * dt;
+
+      // Xác định phase (đi lên / rơi xuống) để chọn animation
+      if (this.velocityY < 0) {
+        this._jumpPhase = "goingUp";
+      } else {
+        this._jumpPhase = "falling";
+      }
+
+      // Chạm đất
+      if (this.sprite.y >= this.groundY) {
+        this.sprite.y = this.groundY;
+        this.velocityY = 0;
+        this._isJumping = false;
+        this._jumpPhase = null;
+        this._currentAnim = null; // force animation refresh ở update sau
+      }
+    }
+
+    // ── Switch animation theo hướng di chuyển + jump phase ──
     this._updateAnimation(inputDir);
 
     // ── Rotation nghiêng theo hướng di chuyển ──
@@ -96,20 +126,24 @@ export class Player {
   }
 
   /**
-   * Chuyển animation dựa trên input direction
+   * Chuyển animation dựa trên input direction + jump phase
    * @param {number} inputDir — -1 (trái), 0 (idle), 1 (phải)
    */
   _updateAnimation(inputDir) {
     let targetAnim;
 
-    if (inputDir < 0) {
-      targetAnim = 'player-left';
+    if (this._isJumping) {
+      // Chỉ dùng player-jump cho cả 2 phase (không dùng duoi nữa)
+      targetAnim = "player-jump";
+      this._targetRotation = 0;
+    } else if (inputDir < 0) {
+      targetAnim = "player-left";
       this._targetRotation = Phaser.Math.DegToRad(this.tiltAngle); // nghiêng trái
     } else if (inputDir > 0) {
-      targetAnim = 'player-right';
+      targetAnim = "player-right";
       this._targetRotation = Phaser.Math.DegToRad(-this.tiltAngle); // nghiêng phải
     } else {
-      targetAnim = 'player-idle';
+      targetAnim = "player-idle";
       this._targetRotation = 0; // về thẳng
     }
 
@@ -142,12 +176,46 @@ export class Player {
   respawn(x, y) {
     this.sprite.setPosition(x, y);
     this.velocityX = 0;
+    this.velocityY = 0;
+    this._isJumping = false;
+    this._jumpPhase = null;
+    this.groundY = y;
     this._currentAnim = null; // force animation switch ở update kế tiếp
-    this.sprite.play('player-idle');
-    this._currentAnim = 'player-idle';
+    this.sprite.play("player-idle");
+    this._currentAnim = "player-idle";
     this._targetRotation = 0;
     this.sprite.rotation = 0;
     this.sprite.setAlpha(1);
+  }
+
+  /**
+   * Kích hoạt nhảy — chỉ nhảy nếu đang ở trên mặt đất.
+   * @returns {boolean} — true nếu nhảy thành công
+   */
+  jump() {
+    if (this._isJumping) return false;
+    this._isJumping = true;
+    this._jumpPhase = "goingUp";
+    this.velocityY = this.jumpVelocity;
+    this.sprite.play("player-jump");
+    this._currentAnim = "player-jump";
+    return true;
+  }
+
+  /** @returns {boolean} — true nếu đang trong không trung */
+  isJumping() {
+    return this._isJumping;
+  }
+
+  /** Hạ cánh cưỡng bức (dùng khi game over / stagger) */
+  land() {
+    if (this._isJumping) {
+      this._isJumping = false;
+      this._jumpPhase = null;
+      this.velocityY = 0;
+      this.sprite.y = this.groundY;
+      this._currentAnim = null;
+    }
   }
 
   /** Trả về vị trí hiện tại */

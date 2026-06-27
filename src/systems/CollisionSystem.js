@@ -17,11 +17,17 @@ export class CollisionSystem {
   /**
    * Kiểm tra va chạm giữa Player và danh sách vật cản active.
    * Trả về obstacle đầu tiên bị trúng (Tree/Rock) hoặc null.
-   * @param {Player} player — instance Player (dùng getHitbox())
+   * Bỏ qua va chạm nếu Player đang nhảy hoặc vừa hạ cánh (grace).
+   * @param {Player} player — instance Player (dùng getHitbox() + isJumping())
    * @param {Array} activeObstacles — mảng các Tree/Rock đang active (từ SpawnSystem._active)
    * @returns {{ obstacle: object|null }}
    */
   check(player, activeObstacles) {
+    // Bỏ qua va chạm obstacle khi đang nhảy
+    if (player.isJumping()) {
+      return { obstacle: null };
+    }
+
     const pb = player.getHitbox();
 
     for (const obstacle of activeObstacles) {

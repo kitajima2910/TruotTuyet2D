@@ -105,6 +105,7 @@ export class AudioManager {
       'sfx-coin':    { type: 'coin' },
       'sfx-boost':   { type: 'boost' },
       'sfx-hit':     { type: 'hit' },
+      'sfx-jump':    { type: 'jump' },
       'sfx-gameover':{ type: 'gameover' },
       'sfx-click':   { type: 'click' },
     };
@@ -134,6 +135,7 @@ export class AudioManager {
       case 'coin': return this._genCoin(ctx, sampleRate);
       case 'boost': return this._genBoost(ctx, sampleRate);
       case 'hit': return this._genHit(ctx, sampleRate);
+      case 'jump': return this._genJump(ctx, sampleRate);
       case 'gameover': return this._genGameOver(ctx, sampleRate);
       case 'click': return this._genClick(ctx, sampleRate);
       case 'bgm': return this._genBGM(ctx, sampleRate);
@@ -169,6 +171,22 @@ export class AudioManager {
       const env = Math.max(0, 1 - t / dur) * 0.4;
       d[i] = (Math.sin(2 * Math.PI * freq * t) * 0.25 +
               Math.sin(2 * Math.PI * freq * 2 * t) * 0.1) * env;
+    }
+    return buf;
+  }
+
+  /** Jump: whoosh — rising sweep 200→800Hz 0.2s */
+  _genJump(ctx, sr) {
+    const dur = 0.2;
+    const len = sr * dur;
+    const buf = ctx.createBuffer(1, len, sr);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const t = i / sr;
+      const freq = 200 + t / dur * 600;
+      const env = Math.max(0, 1 - t / dur) * 0.35;
+      const noise = (Math.random() * 2 - 1) * 0.08;
+      d[i] = (Math.sin(2 * Math.PI * freq * t) * 0.25 + noise) * env;
     }
     return buf;
   }

@@ -112,6 +112,9 @@ export class LoadingScene extends Phaser.Scene {
     this.load.image('player-vc-4', 'assets/player/va-cham/v4.png');
     this.load.image('player-vc-5', 'assets/player/va-cham/v5.png');
 
+    // Player — spritesheet nhảy (dùng cho cả 2 phase: đi lên và rơi xuống)
+    this.load.spritesheet('player-jump-sheet', 'assets/player/spritesheet_jump.png', { frameWidth: 85, frameHeight: 89 });
+
     // Tree — dung-yen
     this.load.image('tree-dy-1', 'assets/cay-thong/dung-yen/dy01.png');
     this.load.image('tree-dy-2', 'assets/cay-thong/dung-yen/dy02.png');
@@ -221,6 +224,15 @@ export class LoadingScene extends Phaser.Scene {
         ],
         frameRate: 10,
         repeat: 0,
+      });
+    }
+
+    if (!this.anims.exists('player-jump')) {
+      this.anims.create({
+        key: 'player-jump',
+        frames: this.anims.generateFrameNumbers('player-jump-sheet', { start: 0, end: 3 }),
+        frameRate: 12,
+        repeat: -1, // loop — dùng cho cả đi lên và rơi xuống
       });
     }
 

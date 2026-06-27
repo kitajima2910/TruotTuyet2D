@@ -63,6 +63,9 @@ const BOOST_MULTIPLIER = 1.5;
 const STAGGER_DURATION = 1200;
 const STAGGER_SLOW_FACTOR = 0.08;
 
+// ── Cấu hình Jump ──
+const JUMP_SLOW_FACTOR = 0.65;
+
 // ── Giới hạn particle ──
 const MAX_SNOW_PARTICLES = 40;
 
@@ -239,9 +242,15 @@ export class PlayScene extends Phaser.Scene {
     this._updateBoost(delta);
 
     // 3. Scroll speed hiệu dụng
-    const effectiveSpeed = this._boosted
+    let effectiveSpeed = this._boosted
       ? diff.scrollSpeed * BOOST_MULTIPLIER
       : diff.scrollSpeed;
+
+    // Jump slow-down: chậm lại khi đang bay lên
+    if (this._player.isJumping()) {
+      effectiveSpeed *= JUMP_SLOW_FACTOR;
+    }
+
     this.scrollSpeed = effectiveSpeed;
 
     // 4. Đồng bộ SpawnSystem
@@ -254,6 +263,15 @@ export class PlayScene extends Phaser.Scene {
 
     // 6. Player
     const inputState = this._input.getState();
+
+    // Jump: xử lý trước player.update() để jump áp dụng trong frame này
+    if (inputState.jump && !this._staggered && !this._isDead) {
+      const didJump = this._player.jump();
+      if (didJump) {
+        AudioManager.get(this.game.registry)?.playSFX('sfx-jump');
+      }
+    }
+
     this._player.update(delta, inputState);
 
     // ── Trail: emit khi player di chuyển ngang ──
@@ -472,6 +490,9 @@ export class PlayScene extends Phaser.Scene {
   }
 
   _handleHit() {
+    // Force-land nếu đang nhảy
+    this._player.land();
+
     this._lives--;
     this.game.events.emit('livesUpdate', this._lives);
     this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
@@ -502,6 +523,7 @@ export class PlayScene extends Phaser.Scene {
     this._staggered = true;
     this._staggerTimer = STAGGER_DURATION;
     this._savedScrollSpeed = this.scrollSpeed;
+    this._player.land(); // đảm bảo đã hạ cánh trước khi stagger
 
     this.scrollSpeed *= STAGGER_SLOW_FACTOR;
     this._spawnSystem.scrollSpeed = this.scrollSpeed;
@@ -552,6 +574,7 @@ export class PlayScene extends Phaser.Scene {
   _handleDeath() {
     this._isDead = true;
     this._invincible = false;
+    this._player.land();
     this._player.sprite.setAlpha(1);
     this._player.velocityX = 0;
 
