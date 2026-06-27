@@ -105,7 +105,7 @@ export class GameOverScene extends Phaser.Scene {
       bg.fillRoundedRect(x - btnWidth / 2, y - btnHeight / 2, btnWidth, btnHeight, 14);
     });
     hitZone.on('pointerdown', () => {
-      this.scene.start('PlayScene', { level: this._level });
+      this.scene.start('LoadingScene', { level: this._level });
     });
   }
 

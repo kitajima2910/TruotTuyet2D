@@ -6,6 +6,10 @@
  *
  * Hiển thị progress bar để người dùng biết tiến trình.
  * Sau khi load xong → tự chuyển sang PlayScene.
+ *
+ * Loading logic:
+ *   • Lần đầu (tải thật): progress real-time theo % file đã download
+ *   • Lần sau (cached):    simulate 0% → 100% để tạo cảm giác loading
  */
 
 export class LoadingScene extends Phaser.Scene {
@@ -19,6 +23,7 @@ export class LoadingScene extends Phaser.Scene {
    */
   init(data) {
     this._level = Phaser.Math.Clamp(data?.level ?? 1, 1, 3);
+    this._startTime = Date.now();
   }
 
   preload() {
@@ -37,11 +42,18 @@ export class LoadingScene extends Phaser.Scene {
     barBg.fillStyle(0x222244, 0.8);
     barBg.fillRoundedRect(barX, barY, barW, barH, 8);
 
-    // Progress bar fill (sẽ cập nhật)
+    // Progress bar fill (sẽ cập nhật qua progress/complete events)
     const barFill = this.add.graphics();
+    const drawBar = (pct) => {
+      barFill.clear();
+      barFill.fillStyle(0x4a9eff, 1);
+      barFill.fillRoundedRect(barX + 2, barY + 2, (barW - 4) * pct, barH - 4, 6);
+    };
+    drawBar(0);
+    // Lưu drawBar lên this để create() có thể gọi simulate
+    this._drawBar = drawBar;
 
     // Sprite loading animation (đứng cạnh chữ)
-    // Dùng frame đầu làm static image trong lúc đợi load
     this._loadSprite = this.add.sprite(centerX - 80, barY - 36, 'ntload-01');
     this._loadSprite.setScale(0.9);
 
@@ -54,17 +66,30 @@ export class LoadingScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    // Lắng nghe tiến trình load
+    // Text phần trăm (dưới thanh loading)
+    const pctText = this.add
+      .text(centerX, barY + 22, '0%', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#88bbff',
+      })
+      .setOrigin(0.5);
+    this._pctText = pctText;
+
+    // ── Lắng nghe tiến trình load thật ──
+    // Dùng để cập nhật progress real-time khi có tải thật
     this.load.on('progress', (value) => {
-      barFill.clear();
-      barFill.fillStyle(0x4a9eff, 1);
-      barFill.fillRoundedRect(barX + 2, barY + 2, (barW - 4) * value, barH - 4, 6);
+      drawBar(value);
+      pctText.setText(`${Math.round(value * 100)}%`);
     });
 
-    // Khi load xong, clear progress text
     this.load.on('complete', () => {
+      drawBar(1);
       loadingText.setText('OK!');
       loadingText.setColor('#66ff88');
+      pctText.setText('100%');
+      pctText.setColor('#66ff88');
     });
 
     // ── Load tất cả gameplay assets ──
@@ -296,9 +321,51 @@ export class LoadingScene extends Phaser.Scene {
     }
     this._loadSprite.play('loading-idle');
 
-    // ── Chờ 1.8s để thấy animation rồi chuyển sang PlayScene ──
-    this.time.delayedCall(1800, () => {
-      this.scene.start('PlayScene', { level: this._level });
+    // ── Quyết định: simulate hay dùng progress thật ──
+    const elapsed = Date.now() - this._startTime;
+    const isCached = elapsed < 300; // <300ms = load từ cache, không có tải thật
+
+    if (isCached) {
+      // Load từ cache → simulate 0% → 100% trong 2.5s
+      this._simulateLoading(2500);
+    } else {
+      // Đã có tải thật, bar đã full → chỉ cần delay ngắn rồi vào game
+      this.time.delayedCall(800, () => {
+        this.scene.start('PlayScene', { level: this._level });
+      });
+    }
+  }
+
+  /**
+   * Simulate loading bar từ 0% → 100% trong duration ms.
+   * Tạo cảm giác loading từ đầu mỗi lần vào game.
+   * @param {number} duration — thời gian simulate (ms)
+   */
+  _simulateLoading(duration) {
+    // Reset bar về 0
+    this._drawBar(0);
+    this._pctText.setText('0%');
+
+    // Dùng Phaser tween để animate từ 0 → 1
+    const progress = { value: 0 };
+    this.tweens.add({
+      targets: progress,
+      value: 1,
+      duration,
+      ease: 'Sine.easeInOut',
+      onUpdate: () => {
+        this._drawBar(progress.value);
+        this._pctText.setText(`${Math.round(progress.value * 100)}%`);
+      },
+      onComplete: () => {
+        this._drawBar(1);
+        this._pctText.setText('100%');
+        this._pctText.setColor('#66ff88');
+        // Vào game
+        this.time.delayedCall(300, () => {
+          this.scene.start('PlayScene', { level: this._level });
+        });
+      },
     });
   }
 }
