@@ -528,6 +528,15 @@ export class PlayScene extends Phaser.Scene {
     this._staggered = false;
     this._staggerTimer = 0;
 
+    // Mất boost khi đứng dậy sau va chạm
+    if (this._boosted) {
+      this._boosted = false;
+      this._boostTimer = 0;
+      this._player.sprite.clearTint();
+      this._setBoostGlow(false);
+      this.game.events.emit('boostUpdate', null);
+    }
+
     this.scrollSpeed = this._savedScrollSpeed;
     this._spawnSystem.scrollSpeed = this._savedScrollSpeed;
     this._spawnSystem.pauseSpawning = false;
