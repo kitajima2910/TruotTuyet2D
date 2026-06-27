@@ -53,6 +53,10 @@ const LEVEL_CONFIG = {
 const BOOST_DURATION = 5000;   // ms — thời lượng tăng tốc
 const BOOST_MULTIPLIER = 1.5;  // hệ số nhân tốc độ khi boost
 
+// ── Cấu hình Stagger (va chạm ngã) ──
+const STAGGER_DURATION = 1200;    // ms — thời gian ngã + đứng dậy
+const STAGGER_SLOW_FACTOR = 0.08; // hệ số slow-motion khi ngã
+
 export class PlayScene extends Phaser.Scene {
   constructor() {
     super({ key: 'PlayScene' });
@@ -75,6 +79,11 @@ export class PlayScene extends Phaser.Scene {
     this._lives = 3;
     this._invincible = false;
     this._invincibleTimer = 0;
+
+    // ── Stagger state (va chạm → ngã → đứng dậy) ──
+    this._staggered = false;
+    this._staggerTimer = 0;
+    this._savedScrollSpeed = 0;
 
     // ── Boost state ──
     this._boosted = false;
@@ -156,6 +165,12 @@ export class PlayScene extends Phaser.Scene {
   update(_time, delta) {
     if (this._isDead) return;
 
+    // ── Trạng thái STAGGER: xử lý riêng (ngã + slow-motion) ──
+    if (this._staggered) {
+      this._updateStagger(delta);
+      return;
+    }
+
     // 0. Cập nhật trạng thái bất tử
     this._updateInvincibility(delta);
 
@@ -190,8 +205,8 @@ export class PlayScene extends Phaser.Scene {
     const { x: playerX } = this._player.getPosition();
     this._spawnSystem.update(delta, playerX);
 
-    // 9. Kiểm tra va chạm obstacle (chỉ khi không bất tử)
-    if (!this._invincible) {
+    // 9. Kiểm tra va chạm obstacle (chỉ khi không staggered và không bất tử)
+    if (!this._staggered && !this._invincible) {
       const { obstacle } = this._collisionSystem.check(
         this._player,
         this._spawnSystem._active,
@@ -301,7 +316,8 @@ export class PlayScene extends Phaser.Scene {
     if (this._lives <= 0) {
       this._handleDeath();
     } else {
-      this._enterInvincible();
+      // Vào stagger (ngã + slow-motion) thay vì invincible ngay
+      this._enterStagger();
     }
   }
 
@@ -311,6 +327,69 @@ export class PlayScene extends Phaser.Scene {
 
     const { width, height } = this.scale;
     this._player.respawn(width / 2, height * 0.75);
+  }
+
+  // ══════════════════════════════════════════════
+  //  STAGGER — va chạm → ngã → slow-motion → đứng dậy
+  // ══════════════════════════════════════════════
+
+  /**
+   * Bắt đầu trạng thái ngã: game chậm lại, player play anim va chạm.
+   */
+  _enterStagger() {
+    this._staggered = true;
+    this._staggerTimer = STAGGER_DURATION;
+    this._savedScrollSpeed = this.scrollSpeed;
+
+    // ── Slow-motion: game chỉ còn 8% tốc độ ──
+    this.scrollSpeed *= STAGGER_SLOW_FACTOR;
+    this._spawnSystem.scrollSpeed = this.scrollSpeed;
+    this._spawnSystem.pauseSpawning = true;
+
+    // ── Freeze player tại chỗ, play animation va chạm ──
+    this._player.velocityX = 0;
+    this._player.sprite.play('player-collision');
+
+    // ── Rung nhẹ camera để tăng cảm giác va chạm ──
+    this.cameras.main.shake(180, 0.008);
+  }
+
+  /**
+   * Cập nhật mỗi frame khi đang stagger.
+   * Nền + vật cản vẫn di chuyển nhưng rất chậm.
+   * @param {number} delta — ms
+   */
+  _updateStagger(delta) {
+    this._staggerTimer -= delta;
+
+    // Cuộn nền chậm
+    this._updateTerrain(delta);
+
+    // Di chuyển vật cản + collectibles chậm (spawning đã pause)
+    const { x: playerX } = this._player.getPosition();
+    this._spawnSystem.update(delta, playerX);
+
+    // Hết thời gian ngã → đứng dậy
+    if (this._staggerTimer <= 0) {
+      this._exitStagger();
+    }
+  }
+
+  /**
+   * Kết thúc stagger: hồi phục tốc độ → respawn → invincible.
+   * _enterInvincible() đã xử lý respawn player về giữa màn hình.
+   */
+  _exitStagger() {
+    this._staggered = false;
+    this._staggerTimer = 0;
+
+    // ── Khôi phục tốc độ game ──
+    this.scrollSpeed = this._savedScrollSpeed;
+    this._spawnSystem.scrollSpeed = this._savedScrollSpeed;
+    this._spawnSystem.pauseSpawning = false;
+
+    // ── Vào trạng thái bất tử (respawn về giữa + nhấp nháy) ──
+    this._enterInvincible();
   }
 
   _handleDeath() {

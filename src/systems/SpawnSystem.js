@@ -43,6 +43,9 @@ export class SpawnSystem {
     // ── Mật độ vật cản (có thể thay đổi từ PlayScene) ──
     this.obstacleDensity = config.obstacleDensity ?? 1;
 
+    // ── Pause spawning (dùng khi stagger để ngừng spawn) ──
+    this.pauseSpawning = false;
+
     // ── Khoảng cách & vùng an toàn ──
     this.minGapX = config.minGapX ?? 80;
     this.playerSafeZone = config.playerSafeZone ?? 70;
@@ -130,28 +133,34 @@ export class SpawnSystem {
       }
     }
 
-    // ── 5. Spawn obstacles theo timer + density ──
-    this._spawnTimer += delta;
-    if (this._spawnTimer >= this.spawnInterval) {
-      this._spawnTimer -= this.spawnInterval;
-      const spawnCount = this._getSpawnCount();
-      for (let i = 0; i < spawnCount; i++) {
-        this._spawnObstacle(playerX);
+    // ── 5. Spawn obstacles theo timer + density (pause khi stagger) ──
+    if (!this.pauseSpawning) {
+      this._spawnTimer += delta;
+      if (this._spawnTimer >= this.spawnInterval) {
+        this._spawnTimer -= this.spawnInterval;
+        const spawnCount = this._getSpawnCount();
+        for (let i = 0; i < spawnCount; i++) {
+          this._spawnObstacle(playerX);
+        }
       }
     }
 
-    // ── 6. Spawn Coins theo timer ──
-    this._coinSpawnTimer += delta;
-    if (this._coinSpawnTimer >= this._coinSpawnInterval) {
-      this._coinSpawnTimer -= this._coinSpawnInterval;
-      this._spawnCoin(playerX);
+    // ── 6. Spawn Coins theo timer (pause khi stagger) ──
+    if (!this.pauseSpawning) {
+      this._coinSpawnTimer += delta;
+      if (this._coinSpawnTimer >= this._coinSpawnInterval) {
+        this._coinSpawnTimer -= this._coinSpawnInterval;
+        this._spawnCoin(playerX);
+      }
     }
 
-    // ── 7. Spawn Boosts theo timer ──
-    this._boostSpawnTimer += delta;
-    if (this._boostSpawnTimer >= this._boostSpawnInterval) {
-      this._boostSpawnTimer -= this._boostSpawnInterval;
-      this._spawnBoost(playerX);
+    // ── 7. Spawn Boosts theo timer (pause khi stagger) ──
+    if (!this.pauseSpawning) {
+      this._boostSpawnTimer += delta;
+      if (this._boostSpawnTimer >= this._boostSpawnInterval) {
+        this._boostSpawnTimer -= this._boostSpawnInterval;
+        this._spawnBoost(playerX);
+      }
     }
   }
 
