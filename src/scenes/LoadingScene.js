@@ -40,9 +40,14 @@ export class LoadingScene extends Phaser.Scene {
     // Progress bar fill (sẽ cập nhật)
     const barFill = this.add.graphics();
 
+    // Sprite loading animation (đứng cạnh chữ)
+    // Dùng frame đầu làm static image trong lúc đợi load
+    this._loadSprite = this.add.sprite(centerX - 80, barY - 36, 'ntload-01');
+    this._loadSprite.setScale(0.9);
+
     // Text "ĐANG TẢI..."
     const loadingText = this.add
-      .text(centerX, barY - 36, 'ĐANG TẢI...', {
+      .text(centerX + 25, barY - 36, 'ĐANG TẢI...', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '18px',
         color: '#aaccff',
@@ -275,7 +280,25 @@ export class LoadingScene extends Phaser.Scene {
       });
     }
 
-    // ── Chuyển sang PlayScene ──
-    this.scene.start('PlayScene', { level: this._level });
+    // ── Loading animation ──
+    if (!this.anims.exists('loading-idle')) {
+      const ntframes = [];
+      for (let i = 1; i <= 16; i++) {
+        const idx = String(i).padStart(2, '0');
+        ntframes.push({ key: `ntload-${idx}` });
+      }
+      this.anims.create({
+        key: 'loading-idle',
+        frames: ntframes,
+        frameRate: 10,
+        repeat: -1,
+      });
+    }
+    this._loadSprite.play('loading-idle');
+
+    // ── Chờ 1s để thấy animation rồi chuyển sang PlayScene ──
+    this.time.delayedCall(1000, () => {
+      this.scene.start('PlayScene', { level: this._level });
+    });
   }
 }

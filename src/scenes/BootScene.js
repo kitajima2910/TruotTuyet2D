@@ -10,12 +10,16 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload() {
-    // ── Chỉ load background cho menu ──
-    // Menu cần: menu-bg
-    // Gameplay assets (player, tree, rock, coin, boost, map, BGM)
-    // được load lazy trong LoadingScene để menu hiện ngay.
+    // ── Asset chung (dùng ở nhiều scene) ──
     this.load.image('menu-bg', 'assets/bg/mm.png');
     this.load.image('gameover-bg', 'assets/bg/go.png');
+
+    // ── Loading animation (dùng trong LoadingScene) ──
+    // 16 frame nhỏ, load sẵn để LoadingScene hiển thị animation ngay
+    for (let i = 1; i <= 16; i++) {
+      const idx = String(i).padStart(2, '0');
+      this.load.image(`ntload-${idx}`, `assets/nt-loading/nt${idx}.png`);
+    }
   }
 
   create() {
