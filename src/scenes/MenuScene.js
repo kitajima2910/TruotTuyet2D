@@ -17,6 +17,11 @@ export class MenuScene extends Phaser.Scene {
       this.scene.stop('UIScene');
     }
 
+    // ── Nền menu ──
+    this.add.image(width / 2, height / 2, 'menu-bg')
+      .setDisplaySize(width, height)
+      .setDepth(-1);
+
     // ── Tiêu đề ──
     this.add.text(centerX, height * 0.12, 'TRƯỢT TUYẾT', {
       fontFamily: 'Arial, sans-serif',

@@ -75,6 +75,9 @@ export class BootScene extends Phaser.Scene {
       this.load.image(`boostpad-${i}`, `assets/boost-pad/bp${i}.png`);
     }
 
+    // ── Menu background ──
+    this.load.image('menu-bg', 'assets/bg/mm.png');
+
     // ── Map textures (3 màn chơi) ──
     this.load.image('map-snow-1', 'assets/map/ver1/map.png');
     this.load.image('map-snow-2', 'assets/map/ver2/map.png');
