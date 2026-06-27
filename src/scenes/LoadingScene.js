@@ -296,8 +296,8 @@ export class LoadingScene extends Phaser.Scene {
     }
     this._loadSprite.play('loading-idle');
 
-    // ── Chờ 1s để thấy animation rồi chuyển sang PlayScene ──
-    this.time.delayedCall(1000, () => {
+    // ── Chờ 1.8s để thấy animation rồi chuyển sang PlayScene ──
+    this.time.delayedCall(1800, () => {
       this.scene.start('PlayScene', { level: this._level });
     });
   }
