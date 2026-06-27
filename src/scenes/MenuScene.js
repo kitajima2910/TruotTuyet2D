@@ -83,6 +83,16 @@ export class MenuScene extends Phaser.Scene {
       this._createLevelButton(centerX, startY + gap * i, lvl);
     });
 
+    // ── Phiên bản game (git commit count + hash) ──
+    this.add
+      .text(centerX, height * 0.985, "v40 (ee7b3ee)", {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "11px",
+        color: "#8899bb",
+      })
+      .setOrigin(0.5)
+      .setDepth(1);
+
     // ── Tên tác giả (nhấp nháy 7 màu) ──
     const authorText = this.add
       .text(centerX, height * 0.95, "Tác giả: Phạm Xuân Hoài", {
