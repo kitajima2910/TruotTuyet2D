@@ -178,10 +178,11 @@ export class PlayScene extends Phaser.Scene {
       baseSpawnInterval: cfg.spawnInterval,
     });
 
-    // ── Audio ──
+    // ── Audio (BGM theo level) ──
     AudioManager.init(this);
     const audio = AudioManager.get(this.game.registry);
-    audio.playBGM('bgm');
+    const bgmKey = ['bgm', 'bgm-level2', 'bgm-level3'][this._level - 1];
+    audio.playBGM(bgmKey);
     audio.playSFX('sfx-click');
 
     // ── Flash overlays ──

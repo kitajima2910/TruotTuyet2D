@@ -83,6 +83,11 @@ export class BootScene extends Phaser.Scene {
     this.load.image('map-snow-1', 'assets/map/ver1/map.png');
     this.load.image('map-snow-2', 'assets/map/ver2/map.png');
     this.load.image('map-snow-3', 'assets/map/ver3/map.png');
+
+    // ── BGM cho từng màn (MP3, Pixabay License) ──
+    this.load.audio('bgm',        'assets/audio/bgm-level1.mp3');
+    this.load.audio('bgm-level2', 'assets/audio/bgm-level2.mp3');
+    this.load.audio('bgm-level3', 'assets/audio/bgm-level3.mp3');
   }
 
   create() {
