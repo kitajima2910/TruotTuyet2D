@@ -48,10 +48,10 @@ export class InputSystem {
    */
   _createJumpButton(scene) {
     const { width, height } = scene.scale;
-    const btnW = 100;
-    const btnH = 44;
+    const btnW = 140;
+    const btnH = 60;
     const btnX = width / 2;
-    const btnY = height - 30;
+    const btnY = height - 90;
 
     // Background
     const bg = scene.add.graphics();
