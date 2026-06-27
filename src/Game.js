@@ -5,6 +5,7 @@
  */
 
 import { BootScene } from './scenes/BootScene.js';
+import { LoadingScene } from './scenes/LoadingScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { PlayScene } from './scenes/PlayScene.js';
 import { UIScene } from './scenes/UIScene.js';
@@ -35,7 +36,7 @@ export function createGame(parentId = 'game-container') {
       width: GAME_WIDTH,
       height: GAME_HEIGHT,
     },
-    scene: [BootScene, MenuScene, PlayScene, UIScene, GameOverScene],
+    scene: [BootScene, LoadingScene, MenuScene, PlayScene, UIScene, GameOverScene],
   };
 
   return new Phaser.Game(config);

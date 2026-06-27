@@ -216,9 +216,9 @@ export class MenuScene extends Phaser.Scene {
       currentColor = color;
     });
 
-    // Click → chuyển PlayScene với level tương ứng
+    // Click → chuyển LoadingScene để load game assets rồi vào PlayScene
     hitZone.on("pointerdown", () => {
-      this.scene.start("PlayScene", { level });
+      this.scene.start("LoadingScene", { level });
     });
   }
 }
