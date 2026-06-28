@@ -164,6 +164,27 @@ export class MissionPanel {
     this._listContainer.add(descText);
     elements.push(descText);
 
+    // ── Pulsing animation nếu đã hoàn thành nhưng chưa claim ──
+    if (mission.completed && !mission.claimed) {
+      scene.tweens.add({
+        targets: nameText,
+        alpha: { from: 1, to: 0.6 },
+        duration: 900,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+      scene.tweens.add({
+        targets: descText,
+        alpha: { from: 1, to: 0.65 },
+        duration: 900,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        delay: 150,
+      });
+    }
+
     // ── Progress bar ──
     const barW = 280;
     const barH = 8;
@@ -310,6 +331,7 @@ export class MissionPanel {
   _destroyItem(elements) {
     elements.forEach(el => {
       if (el && typeof el.destroy === 'function') {
+        this.scene.tweens.killTweensOf(el);
         el.destroy();
       }
     });
