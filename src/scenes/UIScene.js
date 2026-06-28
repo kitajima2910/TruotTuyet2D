@@ -201,6 +201,8 @@ export class UIScene extends Phaser.Scene {
         this._missionPanel.hide();
       } else if (this._achievementPanel && this._achievementPanel.isVisible()) {
         this._achievementPanel.hide();
+      } else if (this._dailyRewardPanel && this._dailyRewardPanel.isVisible()) {
+        this._dailyRewardPanel.hide();
       } else {
         this._togglePause();
       }
@@ -215,7 +217,7 @@ export class UIScene extends Phaser.Scene {
     this._achievementPanel.hide();
 
     // ── DailyRewardPanel ──
-    this._dailyRewardPanel = new DailyRewardPanel(this);
+    this._dailyRewardPanel = new DailyRewardPanel(this, (visible) => this._onDailyRewardVisibility(visible));
     this._dailyRewardPanel.hide();
 
     // ── MissionLogDisplay (toast notifications) ──
@@ -460,6 +462,21 @@ export class UIScene extends Phaser.Scene {
   /* ───────────────────────────────────────────
    *  DAILY REWARD
    * ─────────────────────────────────────────── */
+
+  /**
+   * Callback khi DailyRewardPanel show/hide — pause/resume game.
+   * @param {boolean} visible
+   */
+  _onDailyRewardVisibility(visible) {
+    const ps = this.scene.get('PlayScene');
+    if (!ps) return;
+
+    if (visible) {
+      ps._paused = true;
+    } else {
+      ps._paused = false;
+    }
+  }
 
   _toggleDailyReward() {
     if (this._dailyRewardPanel) {
