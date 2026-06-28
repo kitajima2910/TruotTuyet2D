@@ -27,6 +27,15 @@ export class PlayerProfile {
     this.completedMissions = [];
     this.completedAchievements = [];
     this.lastDailyRewardTime = null;
+
+    // Lifetime Statistics (tích luỹ qua các lần chơi)
+    this.totalDistance = 0;
+    this.totalCoinsCollected = 0;
+    this.totalBoostUsed = 0;
+    this.totalGamesPlayed = 0;
+    this.totalPlayTime = 0;
+    this.highestSingleRun = 0;
+
     this.settings = {
       muted: false,
       bgmVolume: 0.35,
@@ -66,6 +75,12 @@ export class PlayerProfile {
       completedMissions: [...this.completedMissions],
       completedAchievements: [...this.completedAchievements],
       lastDailyRewardTime: this.lastDailyRewardTime,
+      totalDistance: this.totalDistance,
+      totalCoinsCollected: this.totalCoinsCollected,
+      totalBoostUsed: this.totalBoostUsed,
+      totalGamesPlayed: this.totalGamesPlayed,
+      totalPlayTime: this.totalPlayTime,
+      highestSingleRun: this.highestSingleRun,
       settings: { ...this.settings },
     };
   }
@@ -83,6 +98,14 @@ export class PlayerProfile {
     this.completedMissions = Array.isArray(data.completedMissions) ? [...data.completedMissions] : [];
     this.completedAchievements = Array.isArray(data.completedAchievements) ? [...data.completedAchievements] : [];
     this.lastDailyRewardTime = data.lastDailyRewardTime ?? null;
+
+    // Lifetime Statistics
+    this.totalDistance = typeof data.totalDistance === 'number' ? data.totalDistance : 0;
+    this.totalCoinsCollected = typeof data.totalCoinsCollected === 'number' ? data.totalCoinsCollected : 0;
+    this.totalBoostUsed = typeof data.totalBoostUsed === 'number' ? data.totalBoostUsed : 0;
+    this.totalGamesPlayed = typeof data.totalGamesPlayed === 'number' ? data.totalGamesPlayed : 0;
+    this.totalPlayTime = typeof data.totalPlayTime === 'number' ? data.totalPlayTime : 0;
+    this.highestSingleRun = typeof data.highestSingleRun === 'number' ? data.highestSingleRun : 0;
 
     // Merge settings an toàn
     if (data.settings && typeof data.settings === 'object') {

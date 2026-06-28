@@ -19,6 +19,7 @@
 
 import { MissionPanel } from '../ui/MissionPanel.js';
 import { MissionLogDisplay } from '../ui/MissionLogDisplay.js';
+import { AchievementPanel } from '../ui/AchievementPanel.js';
 
 export class UIScene extends Phaser.Scene {
   constructor() {
@@ -144,6 +145,9 @@ export class UIScene extends Phaser.Scene {
     // Missions (giữa dưới)
     this._missionBtn = this._mkCircleBtn(width / 2, bottomY, btnR, '📋', () => this._toggleMissions());
 
+    // Achievement (giữa-phải dưới)
+    this._achieveBtn = this._mkCircleBtn(width * 0.72, bottomY, btnR, '🏆', () => this._toggleAchievements());
+
     // Pause (phải dưới)
     this._pauseBtn = this._mkCircleBtn(width - P - btnR, bottomY, btnR, '⏸', () => this._togglePause());
 
@@ -186,11 +190,13 @@ export class UIScene extends Phaser.Scene {
     this.game.events.on('pauseState', this._onPause, this);
     this.game.events.on('soundUpdate', this._onSoundUpdate, this);
 
-    // ESC key — đóng missions nếu đang mở, nếu không thì toggle pause
+    // ESC key — đóng missions/achievements nếu đang mở, nếu không thì toggle pause
     this._escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
     this._escKey.on('down', () => {
       if (this._missionPanel && this._missionPanel.isVisible()) {
         this._missionPanel.hide();
+      } else if (this._achievementPanel && this._achievementPanel.isVisible()) {
+        this._achievementPanel.hide();
       } else {
         this._togglePause();
       }
@@ -199,6 +205,10 @@ export class UIScene extends Phaser.Scene {
     // ── MissionPanel ──
     this._missionPanel = new MissionPanel(this, (visible) => this._onMissionsVisibility(visible));
     this._missionPanel.hide();
+
+    // ── AchievementPanel ──
+    this._achievementPanel = new AchievementPanel(this, (visible) => this._onAchievementVisibility(visible));
+    this._achievementPanel.hide();
 
     // ── MissionLogDisplay (toast notifications) ──
     this._missionLog = new MissionLogDisplay(this);
@@ -411,6 +421,35 @@ export class UIScene extends Phaser.Scene {
   }
 
   /* ───────────────────────────────────────────
+   *  ACHIEVEMENT PANEL
+   * ─────────────────────────────────────────── */
+
+  /**
+   * Callback khi AchievementPanel show/hide — pause/resume game.
+   * @param {boolean} visible
+   */
+  _onAchievementVisibility(visible) {
+    const ps = this.scene.get('PlayScene');
+    if (!ps) return;
+
+    if (visible) {
+      ps._paused = true;
+    } else {
+      ps._paused = false;
+    }
+  }
+
+  _toggleAchievements() {
+    if (this._achievementPanel) {
+      if (!this._achievementPanel.isVisible()) {
+        const ps = this.scene.get('PlayScene');
+        if (ps && ps._paused && !ps._isDead) return;
+      }
+      this._achievementPanel.toggle();
+    }
+  }
+
+  /* ───────────────────────────────────────────
    *  PAUSE / RESUME
    * ─────────────────────────────────────────── */
 
@@ -471,6 +510,10 @@ export class UIScene extends Phaser.Scene {
     if (this._missionLog) {
       this._missionLog.destroy();
       this._missionLog = null;
+    }
+    if (this._achievementPanel) {
+      this._achievementPanel.destroy();
+      this._achievementPanel = null;
     }
   }
 }

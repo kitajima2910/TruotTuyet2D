@@ -11,12 +11,13 @@ export class GameOverScene extends Phaser.Scene {
 
   /**
    * Nhận dữ liệu từ PlayScene
-   * @param {{ score: number, coins: number, bestScore: number, level: number }} data
+   * @param {{ score: number, coins: number, bestScore: number, level: number, boostUsed?: number }} data
    */
   init(data) {
     this._score = data?.score ?? 0;
     this._coins = data?.coins ?? 0;
     this._level = data?.level ?? 1;
+    this._boostUsed = data?.boostUsed ?? 0;
 
     // Lấy bestScore từ PlayerProfile — nguồn dữ liệu duy nhất
     const profile = this.game.registry.get('playerProfile');
@@ -82,6 +83,13 @@ export class GameOverScene extends Phaser.Scene {
       color: '#ffd700',
     }).setOrigin(0.5);
 
+    // ── Cập nhật Lifetime Statistics và thông báo AchievementSystem ──
+    this._updateLifetimeStats();
+
+    // Lưu lại sau khi cập nhật lifetime stats
+    const sm2 = this.game.registry.get('saveManager');
+    if (sm2) sm2.save();
+
     // ── Điểm cao nhất (Best Score) ──
     this.add.text(centerX, height * 0.52, `CAO NHẤT: ${this._bestScore}`, {
       fontFamily: 'Arial, sans-serif',
@@ -126,6 +134,40 @@ export class GameOverScene extends Phaser.Scene {
     hitZone.on('pointerdown', () => {
       this.scene.start('LoadingScene', { level: this._level });
     });
+  }
+
+  /**
+   * Cập nhật Lifetime Statistics trong PlayerProfile và thông báo AchievementSystem.
+   * Gọi sau khi đồng bộ bestScore.
+   */
+  _updateLifetimeStats() {
+    const profile = this.game.registry.get('playerProfile');
+    if (!profile) return;
+
+    // Cộng dồn lifetime stats
+    profile.totalDistance += this._score;
+    profile.totalCoinsCollected += this._coins;
+    profile.totalBoostUsed += this._boostUsed;
+    profile.totalGamesPlayed += 1;
+    // totalPlayTime ước lượng = (score / avgSpeed), tạm thời +30s mỗi game
+    profile.totalPlayTime += 30;
+
+    // highestSingleRun — chỉ ghi nếu score lần này cao hơn
+    if (this._score > profile.highestSingleRun) {
+      profile.highestSingleRun = this._score;
+    }
+
+    // Thông báo AchievementSystem
+    const achievementSystem = this.game.registry.get('achievementSystem');
+    if (achievementSystem) {
+      achievementSystem.updateProgress('LIFETIME_DISTANCE_CHANGED', profile.totalDistance);
+      achievementSystem.updateProgress('LIFETIME_COIN_COLLECTED', profile.totalCoinsCollected);
+      achievementSystem.updateProgress('BOOST_USED', profile.totalBoostUsed);
+      achievementSystem.updateProgress('GAME_FINISHED', profile.totalGamesPlayed);
+      achievementSystem.updateProgress('HIGHEST_SCORE_UPDATED', profile.highestSingleRun);
+    }
+
+    // Lưu qua SaveManager (đã được lưu ở create())
   }
 
   _createMenuButton(x, y) {

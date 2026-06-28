@@ -371,6 +371,7 @@ export class PlayScene extends Phaser.Scene {
     if (boost) {
       boost.trigger();
       this._activateBoost();
+      this._scoreSystem.addBoostUsed();
       // Lấy kết quả thay đổi từ BOOST_USED để gửi toast
       const changes = this._missionSystem?.updateProgress('BOOST_USED', 1);
       this._emitMissionChanges(changes);
@@ -657,6 +658,7 @@ export class PlayScene extends Phaser.Scene {
           coins: this._scoreSystem.getCoinCount(),
           bestScore: this._scoreSystem.getBestScore(),
           level: this._level,
+          boostUsed: this._scoreSystem.getBoostUsed(),
         });
       });
     });

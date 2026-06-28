@@ -20,6 +20,7 @@ import { SaveManager } from './managers/SaveManager.js';
 import { PlayerProfile } from './profile/PlayerProfile.js';
 import { SkinSystem } from './systems/SkinSystem.js';
 import { ScoreSystem } from './systems/ScoreSystem.js';
+import { AchievementSystem } from './systems/AchievementSystem.js';
 
 const GAME_WIDTH = 720;
 const GAME_HEIGHT = 1280;
@@ -64,6 +65,12 @@ export function createGame(parentId = 'game-container') {
 
   // ── Gán profile toàn cục cho ScoreSystem ──
   ScoreSystem.setProfile(profile);
+
+  // ── Khởi tạo AchievementSystem ──
+  const achievementSystem = new AchievementSystem();
+  achievementSystem.setRegistry(game.registry);
+  AchievementSystem.register(game.registry, achievementSystem);
+  achievementSystem.loadAchievements();
 
   return game;
 }

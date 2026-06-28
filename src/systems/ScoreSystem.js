@@ -12,6 +12,7 @@ export class ScoreSystem {
   constructor(profile) {
     this._score = 0;
     this._coinCount = 0;
+    this._boostUsed = 0;
     this._lastMissionDist = 0;
 
     // Nếu không truyền profile (PlayScene khởi tạo không tham số), lấy từ static
@@ -71,6 +72,16 @@ export class ScoreSystem {
   /** Lấy số xu đã thu thập */
   getCoinCount() {
     return this._coinCount;
+  }
+
+  /** Tăng số boost đã dùng trong phiên */
+  addBoostUsed() {
+    this._boostUsed++;
+  }
+
+  /** Lấy số boost đã dùng trong phiên */
+  getBoostUsed() {
+    return this._boostUsed;
   }
 
   /**

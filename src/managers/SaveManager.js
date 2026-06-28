@@ -114,6 +114,12 @@ export class SaveManager {
       this._profile.completedMissions = [...defaults.completedMissions];
       this._profile.completedAchievements = [...defaults.completedAchievements];
       this._profile.lastDailyRewardTime = defaults.lastDailyRewardTime;
+      this._profile.totalDistance = defaults.totalDistance;
+      this._profile.totalCoinsCollected = defaults.totalCoinsCollected;
+      this._profile.totalBoostUsed = defaults.totalBoostUsed;
+      this._profile.totalGamesPlayed = defaults.totalGamesPlayed;
+      this._profile.totalPlayTime = defaults.totalPlayTime;
+      this._profile.highestSingleRun = defaults.highestSingleRun;
       this._profile.settings = { ...defaults.settings };
     }
     this._lastJson = null; // force save
