@@ -20,53 +20,136 @@
  */
 
 const MISSION_DEFS = Object.freeze([
+  // ── Màn 1 (dễ) ──
   {
-    id: 'dist_500',
+    id: 'L1_DIST',
+    name: 'Đi 200m',
+    desc: 'Vượt qua quãng đường 200m',
+    eventType: 'DISTANCE_CHANGED',
+    target: 200,
+    reward: 25,
+    level: 1,
+  },
+  {
+    id: 'L1_COIN',
+    name: 'Thu 10 Coin',
+    desc: 'Thu thập 10 xu trong một lần chơi',
+    eventType: 'COIN_COLLECTED',
+    target: 10,
+    reward: 20,
+    level: 1,
+  },
+  {
+    id: 'L1_TIME',
+    name: 'Sống 30 giây',
+    desc: 'Sống sót 30 giây trong một lần chơi',
+    eventType: 'TIME_SURVIVED',
+    target: 30,
+    reward: 20,
+    level: 1,
+  },
+  {
+    id: 'L1_BOOST',
+    name: 'Kích hoạt Boost',
+    desc: 'Kích hoạt Boost 1 lần',
+    eventType: 'BOOST_USED',
+    target: 1,
+    reward: 15,
+    level: 1,
+  },
+
+  // ── Màn 2 (trung bình) ──
+  {
+    id: 'L2_DIST',
     name: 'Đi 500m',
     desc: 'Vượt qua quãng đường 500m',
     eventType: 'DISTANCE_CHANGED',
     target: 500,
-    reward: 50,
+    reward: 45,
+    level: 2,
   },
   {
-    id: 'dist_2000',
-    name: 'Đi 2000m',
-    desc: 'Vượt qua quãng đường 2000m',
-    eventType: 'DISTANCE_CHANGED',
-    target: 2000,
-    reward: 200,
-  },
-  {
-    id: 'coin_20',
+    id: 'L2_COIN',
     name: 'Thu 20 Coin',
     desc: 'Thu thập 20 xu trong một lần chơi',
     eventType: 'COIN_COLLECTED',
     target: 20,
-    reward: 30,
+    reward: 35,
+    level: 2,
   },
   {
-    id: 'coin_100',
-    name: 'Thu 100 Coin',
-    desc: 'Thu thập 100 xu trong một lần chơi',
-    eventType: 'COIN_COLLECTED',
-    target: 100,
-    reward: 150,
-  },
-  {
-    id: 'survive_60',
-    name: 'Sống 60 giây',
-    desc: 'Sống sót 60 giây trong một lần chơi',
+    id: 'L2_TIME',
+    name: 'Sống 50 giây',
+    desc: 'Sống sót 50 giây trong một lần chơi',
     eventType: 'TIME_SURVIVED',
-    target: 60,
-    reward: 100,
+    target: 50,
+    reward: 40,
+    level: 2,
   },
   {
-    id: 'boost_5',
-    name: 'Kích hoạt Boost 5 lần',
-    desc: 'Kích hoạt Boost 5 lần trong một lần chơi',
+    id: 'L2_BOOST',
+    name: 'Boost 2 lần',
+    desc: 'Kích hoạt Boost 2 lần',
     eventType: 'BOOST_USED',
-    target: 5,
+    target: 2,
+    reward: 30,
+    level: 2,
+  },
+  {
+    id: 'L2_COMPLETE',
+    name: 'Hoàn thành màn',
+    desc: 'Hoàn thành 1 lần chơi màn 2',
+    eventType: 'GAME_COMPLETED',
+    target: 1,
     reward: 80,
+    level: 2,
+  },
+
+  // ── Màn 3 (khó) ──
+  {
+    id: 'L3_DIST',
+    name: 'Đi 800m',
+    desc: 'Vượt qua quãng đường 800m',
+    eventType: 'DISTANCE_CHANGED',
+    target: 800,
+    reward: 65,
+    level: 3,
+  },
+  {
+    id: 'L3_COIN',
+    name: 'Thu 30 Coin',
+    desc: 'Thu thập 30 xu trong một lần chơi',
+    eventType: 'COIN_COLLECTED',
+    target: 30,
+    reward: 50,
+    level: 3,
+  },
+  {
+    id: 'L3_TIME',
+    name: 'Sống 70 giây',
+    desc: 'Sống sót 70 giây trong một lần chơi',
+    eventType: 'TIME_SURVIVED',
+    target: 70,
+    reward: 60,
+    level: 3,
+  },
+  {
+    id: 'L3_BOOST',
+    name: 'Boost 3 lần',
+    desc: 'Kích hoạt Boost 3 lần',
+    eventType: 'BOOST_USED',
+    target: 3,
+    reward: 45,
+    level: 3,
+  },
+  {
+    id: 'L3_COMPLETE',
+    name: 'Hoàn thành màn',
+    desc: 'Hoàn thành 1 lần chơi màn 3',
+    eventType: 'GAME_COMPLETED',
+    target: 1,
+    reward: 120,
+    level: 3,
   },
 ]);
 
@@ -104,15 +187,16 @@ export class MissionSystem {
   static get MISSION_DEFS() { return MISSION_DEFS; }
 
   /**
-   * Khởi tạo (hoặc reset) tất cả missions về progress = 0.
-   * Gọi mỗi khi bắt đầu gameplay mới (PlayScene.create()).
+   * Khởi tạo (hoặc reset) missions cho màn chơi cụ thể về progress = 0.
+   * @param {number} [level=1] — màn chơi (1-3)
    */
-  loadMissions() {
-    this._missions = MISSION_DEFS.map(def => ({
-      ...def,
-      progress: 0,
-    }));
-
+  loadMissions(level = 1) {
+    this._missions = MISSION_DEFS
+      .filter(def => def.level === level)
+      .map(def => ({
+        ...def,
+        progress: 0,
+      }));
   }
 
   /**

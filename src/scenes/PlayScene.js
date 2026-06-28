@@ -107,7 +107,7 @@ export class PlayScene extends Phaser.Scene {
       ms.setRegistry(this.game.registry);
       MissionSystem.register(this.game.registry, ms);
     }
-    ms.loadMissions();
+    ms.loadMissions(this._level);
     this._missionSystem = ms;
 
     // ── Stagger state ──
