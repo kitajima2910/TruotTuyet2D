@@ -18,9 +18,11 @@
 export class MissionPanel {
   /**
    * @param {Phaser.Scene} scene — UIScene
+   * @param {function(boolean): void} [onVisibilityChange] — callback khi show/hide
    */
-  constructor(scene) {
+  constructor(scene, onVisibilityChange) {
     this.scene = scene;
+    this._onVisibilityChange = onVisibilityChange;
     this._visible = false;
     this._missionSystem = scene.game.registry.get('missionSystem');
     this._items = [];
@@ -71,6 +73,9 @@ export class MissionPanel {
     this._visible = true;
     this._container.setVisible(true);
     this._refresh();
+    if (typeof this._onVisibilityChange === 'function') {
+      this._onVisibilityChange(true);
+    }
   }
 
   /** Ẩn panel */
@@ -78,6 +83,9 @@ export class MissionPanel {
     if (!this._visible) return;
     this._visible = false;
     this._container.setVisible(false);
+    if (typeof this._onVisibilityChange === 'function') {
+      this._onVisibilityChange(false);
+    }
   }
 
   /** Bật/tắt */

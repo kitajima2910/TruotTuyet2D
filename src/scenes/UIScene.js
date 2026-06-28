@@ -186,12 +186,18 @@ export class UIScene extends Phaser.Scene {
     this.game.events.on('pauseState', this._onPause, this);
     this.game.events.on('soundUpdate', this._onSoundUpdate, this);
 
-    // ESC key
+    // ESC key — đóng missions nếu đang mở, nếu không thì toggle pause
     this._escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-    this._escKey.on('down', () => this._togglePause());
+    this._escKey.on('down', () => {
+      if (this._missionPanel && this._missionPanel.isVisible()) {
+        this._missionPanel.hide();
+      } else {
+        this._togglePause();
+      }
+    });
 
     // ── MissionPanel ──
-    this._missionPanel = new MissionPanel(this);
+    this._missionPanel = new MissionPanel(this, (visible) => this._onMissionsVisibility(visible));
     this._missionPanel.hide();
 
     // ── MissionLogDisplay (toast notifications) ──
@@ -376,6 +382,23 @@ export class UIScene extends Phaser.Scene {
    *  MISSIONS PANEL
    * ─────────────────────────────────────────── */
 
+  /**
+   * Callback khi MissionPanel show/hide — pause/resume game.
+   * @param {boolean} visible
+   */
+  _onMissionsVisibility(visible) {
+    const ps = this.scene.get('PlayScene');
+    if (!ps) return;
+
+    if (visible) {
+      // Mở missions → pause game (không hiện pause overlay)
+      ps._paused = true;
+    } else {
+      // Đóng missions → resume game
+      ps._paused = false;
+    }
+  }
+
   _toggleMissions() {
     if (this._missionPanel) {
       // Không cho mở mission khi đang pause
@@ -394,6 +417,12 @@ export class UIScene extends Phaser.Scene {
   _togglePause() {
     const ps = this.scene.get('PlayScene');
     if (!ps) return;
+
+    // Đang mở missions → đóng missions trước (và game sẽ resume qua callback)
+    if (this._missionPanel && this._missionPanel.isVisible()) {
+      this._missionPanel.hide();
+      return;
+    }
 
     // Không cho pause khi đã chết hoặc đang game over
     if (!ps._paused && ps._isDead) return;
