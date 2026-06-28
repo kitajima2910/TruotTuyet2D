@@ -48,10 +48,10 @@ export class InputSystem {
    */
   _createJumpButton(scene) {
     const { width, height } = scene.scale;
-    const btnW = 140;
-    const btnH = 60;
+    const btnW = 155;
+    const btnH = 66;
     const btnX = width / 2;
-    const btnY = height - 90;
+    const btnY = height - 120;
 
     // Background
     const bg = scene.add.graphics();
@@ -62,7 +62,7 @@ export class InputSystem {
     // Label
     const label = scene.add.text(btnX, btnY, 'NHẢY', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '16px',
+      fontSize: '18px',
       fontStyle: 'bold',
       color: '#ffffff',
       stroke: '#000000',
