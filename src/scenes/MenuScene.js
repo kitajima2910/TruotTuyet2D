@@ -4,6 +4,7 @@
  */
 
 import { DailyRewardPanel } from '../ui/DailyRewardPanel.js';
+import { HowToPlayPanel } from '../ui/HowToPlayPanel.js';
 import { GAME_VERSION, COMMIT_HASH } from '../version.js';
 
 export class MenuScene extends Phaser.Scene {
@@ -125,9 +126,16 @@ export class MenuScene extends Phaser.Scene {
       },
     });
 
+    // ── HowToPlayPanel ──
+    this._howToPlayPanel = new HowToPlayPanel(this);
+    this._howToPlayPanel.hide();
+
     // ── DailyRewardPanel ──
     this._dailyRewardPanel = new DailyRewardPanel(this);
     this._dailyRewardPanel.hide();
+
+    // ── Nút Hướng dẫn ──
+    this._createHowToPlayButton(centerX, height * 0.85);
 
     // ── Nút Daily Reward ──
     this._createDailyRewardButton(centerX, height * 0.91);
@@ -165,6 +173,41 @@ export class MenuScene extends Phaser.Scene {
     btn.on('pointerdown', () => {
       if (this._dailyRewardPanel) {
         this._dailyRewardPanel.show();
+      }
+    });
+  }
+
+  /**
+   * Tạo nút Hướng dẫn.
+   */
+  _createHowToPlayButton(x, y) {
+    const btn = this.add.text(x, y, '📖 Hướng dẫn', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '16px',
+      fontStyle: 'bold',
+      color: '#88ccff',
+      stroke: '#000000',
+      strokeThickness: 3,
+      shadow: {
+        offsetX: 1,
+        offsetY: 1,
+        color: '#00000044',
+        blur: 4,
+        fill: true,
+      },
+    }).setOrigin(0.5).setDepth(1).setInteractive({ useHandCursor: true });
+
+    btn.on('pointerover', () => {
+      btn.setColor('#ffffff');
+      btn.setScale(1.05);
+    });
+    btn.on('pointerout', () => {
+      btn.setColor('#88ccff');
+      btn.setScale(1);
+    });
+    btn.on('pointerdown', () => {
+      if (this._howToPlayPanel) {
+        this._howToPlayPanel.show();
       }
     });
   }
