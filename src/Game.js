@@ -21,6 +21,7 @@ import { PlayerProfile } from './profile/PlayerProfile.js';
 import { SkinSystem } from './systems/SkinSystem.js';
 import { ScoreSystem } from './systems/ScoreSystem.js';
 import { AchievementSystem } from './systems/AchievementSystem.js';
+import { DailyRewardSystem } from './systems/DailyRewardSystem.js';
 
 const GAME_WIDTH = 720;
 const GAME_HEIGHT = 1280;
@@ -71,6 +72,12 @@ export function createGame(parentId = 'game-container') {
   achievementSystem.setRegistry(game.registry);
   AchievementSystem.register(game.registry, achievementSystem);
   achievementSystem.loadAchievements();
+
+  // ── Khởi tạo DailyRewardSystem ──
+  const dailyRewardSystem = new DailyRewardSystem();
+  dailyRewardSystem.setRegistry(game.registry);
+  DailyRewardSystem.register(game.registry, dailyRewardSystem);
+  dailyRewardSystem.initialize();
 
   return game;
 }

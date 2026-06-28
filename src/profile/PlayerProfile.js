@@ -27,6 +27,7 @@ export class PlayerProfile {
     this.completedMissions = [];
     this.completedAchievements = [];
     this.lastDailyRewardTime = null;
+    this.dailyLoginStreak = 0;
 
     // Lifetime Statistics (tích luỹ qua các lần chơi)
     this.totalDistance = 0;
@@ -74,6 +75,7 @@ export class PlayerProfile {
       ownedSkins: [...this.ownedSkins],
       completedMissions: [...this.completedMissions],
       completedAchievements: [...this.completedAchievements],
+      dailyLoginStreak: this.dailyLoginStreak,
       lastDailyRewardTime: this.lastDailyRewardTime,
       totalDistance: this.totalDistance,
       totalCoinsCollected: this.totalCoinsCollected,
@@ -97,6 +99,7 @@ export class PlayerProfile {
     this.ownedSkins = Array.isArray(data.ownedSkins) ? [...data.ownedSkins] : ['default'];
     this.completedMissions = Array.isArray(data.completedMissions) ? [...data.completedMissions] : [];
     this.completedAchievements = Array.isArray(data.completedAchievements) ? [...data.completedAchievements] : [];
+    this.dailyLoginStreak = typeof data.dailyLoginStreak === 'number' ? data.dailyLoginStreak : 0;
     this.lastDailyRewardTime = data.lastDailyRewardTime ?? null;
 
     // Lifetime Statistics

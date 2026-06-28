@@ -3,6 +3,8 @@
  * Hiển thị tiêu đề game và nút Start
  */
 
+import { DailyRewardPanel } from '../ui/DailyRewardPanel.js';
+
 export class MenuScene extends Phaser.Scene {
   constructor() {
     super({ key: "MenuScene" });
@@ -121,6 +123,69 @@ export class MenuScene extends Phaser.Scene {
         authorText.setColor(colors[ci]);
       },
     });
+
+    // ── DailyRewardPanel ──
+    this._dailyRewardPanel = new DailyRewardPanel(this);
+    this._dailyRewardPanel.hide();
+
+    // ── Nút Daily Reward ──
+    this._createDailyRewardButton(centerX, height * 0.91);
+
+    // ── Tự động hiển thị panel nếu đủ điều kiện ──
+    this._checkAndShowDailyReward();
+  }
+
+  /**
+   * Tạo nút Daily Reward phía dưới menu.
+   */
+  _createDailyRewardButton(x, y) {
+    const btn = this.add.text(x, y, '🎁 Nhận thưởng hàng ngày', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      fontStyle: 'bold',
+      color: '#ffd700',
+      stroke: '#000000',
+      strokeThickness: 3,
+      shadow: {
+        offsetX: 1,
+        offsetY: 1,
+        color: '#00000044',
+        blur: 4,
+        fill: true,
+      },
+    }).setOrigin(0.5).setDepth(1).setInteractive({ useHandCursor: true });
+
+    btn.on('pointerover', () => {
+      btn.setColor('#ffffff');
+      btn.setScale(1.05);
+    });
+    btn.on('pointerout', () => {
+      btn.setColor('#ffd700');
+      btn.setScale(1);
+    });
+    btn.on('pointerdown', () => {
+      if (this._dailyRewardPanel) {
+        this._dailyRewardPanel.show();
+      }
+    });
+  }
+
+  /**
+   * Kiểm tra và tự động hiển thị DailyRewardPanel nếu đủ điều kiện.
+   * Chỉ show một lần khi vào menu, không tự động nhận thưởng.
+   */
+  _checkAndShowDailyReward() {
+    const dailySystem = this.game.registry.get('dailyRewardSystem');
+    if (!dailySystem) return;
+
+    // Delay nhẹ để menu render xong trước khi hiện panel
+    if (dailySystem.canClaim()) {
+      this.time.delayedCall(600, () => {
+        if (this._dailyRewardPanel && !this._dailyRewardPanel.isVisible()) {
+          this._dailyRewardPanel.show();
+        }
+      });
+    }
   }
 
   /**

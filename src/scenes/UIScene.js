@@ -20,6 +20,7 @@
 import { MissionPanel } from '../ui/MissionPanel.js';
 import { MissionLogDisplay } from '../ui/MissionLogDisplay.js';
 import { AchievementPanel } from '../ui/AchievementPanel.js';
+import { DailyRewardPanel } from '../ui/DailyRewardPanel.js';
 
 export class UIScene extends Phaser.Scene {
   constructor() {
@@ -146,7 +147,10 @@ export class UIScene extends Phaser.Scene {
     this._missionBtn = this._mkCircleBtn(width / 2, bottomY, btnR, '📋', () => this._toggleMissions());
 
     // Achievement (giữa-phải dưới)
-    this._achieveBtn = this._mkCircleBtn(width * 0.72, bottomY, btnR, '🏆', () => this._toggleAchievements());
+    this._achieveBtn = this._mkCircleBtn(width * 0.68, bottomY, btnR, '🏆', () => this._toggleAchievements());
+
+    // Daily Reward (giữa-phải dưới, cạnh Achievement)
+    this._dailyBtn = this._mkCircleBtn(width * 0.82, bottomY, btnR, '🎁', () => this._toggleDailyReward());
 
     // Pause (phải dưới)
     this._pauseBtn = this._mkCircleBtn(width - P - btnR, bottomY, btnR, '⏸', () => this._togglePause());
@@ -209,6 +213,10 @@ export class UIScene extends Phaser.Scene {
     // ── AchievementPanel ──
     this._achievementPanel = new AchievementPanel(this, (visible) => this._onAchievementVisibility(visible));
     this._achievementPanel.hide();
+
+    // ── DailyRewardPanel ──
+    this._dailyRewardPanel = new DailyRewardPanel(this);
+    this._dailyRewardPanel.hide();
 
     // ── MissionLogDisplay (toast notifications) ──
     this._missionLog = new MissionLogDisplay(this);
@@ -450,6 +458,16 @@ export class UIScene extends Phaser.Scene {
   }
 
   /* ───────────────────────────────────────────
+   *  DAILY REWARD
+   * ─────────────────────────────────────────── */
+
+  _toggleDailyReward() {
+    if (this._dailyRewardPanel) {
+      this._dailyRewardPanel.toggle();
+    }
+  }
+
+  /* ───────────────────────────────────────────
    *  PAUSE / RESUME
    * ─────────────────────────────────────────── */
 
@@ -514,6 +532,10 @@ export class UIScene extends Phaser.Scene {
     if (this._achievementPanel) {
       this._achievementPanel.destroy();
       this._achievementPanel = null;
+    }
+    if (this._dailyRewardPanel) {
+      this._dailyRewardPanel.destroy();
+      this._dailyRewardPanel = null;
     }
   }
 }

@@ -115,4 +115,18 @@ export class SkinSystem {
   getSelected() {
     return SKIN_DEFS.find(s => s.id === this._profile.selectedSkin);
   }
+
+  /**
+   * Lấy thông tin skin theo ID, kèm trạng thái owned.
+   * @param {string} skinId
+   * @returns {{ id: string, name: string, cost: number, owned: boolean }|null}
+   */
+  getSkinById(skinId) {
+    const def = SKIN_DEFS.find(s => s.id === skinId);
+    if (!def) return null;
+    return {
+      ...def,
+      owned: this.isSkinOwned(skinId),
+    };
+  }
 }

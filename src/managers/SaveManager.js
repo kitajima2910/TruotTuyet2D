@@ -17,7 +17,7 @@
 import { PlayerProfile } from '../profile/PlayerProfile.js';
 
 const SAVE_KEY = 'truottuyet_save';
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 export class SaveManager {
   constructor() {
@@ -113,6 +113,7 @@ export class SaveManager {
       this._profile.ownedSkins = [...defaults.ownedSkins];
       this._profile.completedMissions = [...defaults.completedMissions];
       this._profile.completedAchievements = [...defaults.completedAchievements];
+      this._profile.dailyLoginStreak = defaults.dailyLoginStreak;
       this._profile.lastDailyRewardTime = defaults.lastDailyRewardTime;
       this._profile.totalDistance = defaults.totalDistance;
       this._profile.totalCoinsCollected = defaults.totalCoinsCollected;
@@ -159,6 +160,12 @@ export class SaveManager {
         localStorage.removeItem('truot tuyet best score');
       } catch (_) { /* ignore */ }
       d.version = 1;
+    }
+
+    // Version 1 → 2: thêm dailyLoginStreak
+    if (version < 2) {
+      if (typeof d.dailyLoginStreak !== 'number') d.dailyLoginStreak = 0;
+      d.version = 2;
     }
 
     return d;
