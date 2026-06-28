@@ -139,7 +139,7 @@ export class MissionPanel {
     const elements = [];
 
     // ── Tên mission ──
-    const nameColor = mission.claimed ? '#888888'
+    const nameColor = mission.claimed ? '#66ff88'
       : mission.completed ? '#66ff88'
       : '#ffffff';
     const nameText = scene.add.text(cx, y, mission.name, {
@@ -180,7 +180,7 @@ export class MissionPanel {
 
     // Fill
     const barFill = scene.add.graphics();
-    const fillColor = mission.claimed ? 0x666666
+    const fillColor = mission.claimed ? 0x66ff88
       : ratio >= 1 ? 0x66ff88
       : 0x4a9eff;
     barFill.fillStyle(fillColor, 1);
@@ -192,7 +192,7 @@ export class MissionPanel {
     const pctText = scene.add.text(cx, barY + 16, `${mission.progress} / ${mission.target}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '12px',
-      color: mission.claimed ? '#666666' : '#cccccc',
+      color: '#cccccc',
     }).setOrigin(0.5);
     this._listContainer.add(pctText);
     elements.push(pctText);
@@ -216,7 +216,7 @@ export class MissionPanel {
         fontFamily: 'Arial, sans-serif',
         fontSize: '14px',
         fontStyle: 'bold',
-        color: '#666666',
+        color: '#66ff88',
       }).setOrigin(0.5);
       this._listContainer.add(doneText);
       elements.push(doneText);

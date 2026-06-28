@@ -139,7 +139,7 @@ export class AchievementPanel {
     const elements = [];
 
     // ── Icon + Tên ──
-    const nameColor = achievement.claimed ? '#888888'
+    const nameColor = achievement.claimed ? '#ffd700'
       : achievement.completed ? '#ffd700'
       : '#ffffff';
     const nameText = scene.add.text(cx, y, `${achievement.icon} ${achievement.name}`, {
@@ -180,7 +180,7 @@ export class AchievementPanel {
 
     // Fill
     const barFill = scene.add.graphics();
-    const fillColor = achievement.claimed ? 0x666666
+    const fillColor = achievement.claimed ? 0xffd700
       : ratio >= 1 ? 0xffd700
       : 0x9b59b6;
     barFill.fillStyle(fillColor, 1);
@@ -192,7 +192,7 @@ export class AchievementPanel {
     const pctText = scene.add.text(cx, barY + 16, `${Math.floor(achievement.progress)} / ${achievement.target}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '11px',
-      color: achievement.claimed ? '#666666' : '#cccccc',
+      color: '#cccccc',
     }).setOrigin(0.5);
     this._listContainer.add(pctText);
     elements.push(pctText);
@@ -220,7 +220,7 @@ export class AchievementPanel {
         fontFamily: 'Arial, sans-serif',
         fontSize: '13px',
         fontStyle: 'bold',
-        color: '#666666',
+        color: '#ffd700',
       }).setOrigin(0.5);
       this._listContainer.add(doneText);
       elements.push(doneText);
