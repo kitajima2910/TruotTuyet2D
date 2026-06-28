@@ -70,8 +70,8 @@ export class GameOverScene extends Phaser.Scene {
       strokeThickness: 6,
     }).setOrigin(0.5);
 
-    // ── Khoảng cách (Distance Score) ──
-    this.add.text(centerX, height * 0.36, `KHOẢNG CÁCH: ${this._score}`, {
+    // ── Khoảng cách (Distance Score) — đẩy xuống 3× gap so với panel ──
+    this.add.text(centerX, height * 0.45, `KHOẢNG CÁCH: ${this._score}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '36px',
       fontStyle: 'bold',
@@ -79,7 +79,7 @@ export class GameOverScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // ── Xu thu thập (Coin Collected) ──
-    this.add.text(centerX, height * 0.44, `XU THU THẬP: ${this._coins}`, {
+    this.add.text(centerX, height * 0.53, `XU THU THẬP: ${this._coins}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',
       fontStyle: 'bold',
@@ -94,17 +94,17 @@ export class GameOverScene extends Phaser.Scene {
     if (sm2) sm2.save();
 
     // ── Điểm cao nhất (Best Score) ──
-    this.add.text(centerX, height * 0.52, `CAO NHẤT: ${this._bestScore}`, {
+    this.add.text(centerX, height * 0.61, `CAO NHẤT: ${this._bestScore}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '26px',
       color: '#f1c40f',
     }).setOrigin(0.5);
 
     // ── Nút Chơi lại ──
-    this._createRetryButton(centerX, height * 0.64);
+    this._createRetryButton(centerX, height * 0.73);
 
     // ── Nút về Menu ──
-    this._createMenuButton(centerX, height * 0.74);
+    this._createMenuButton(centerX, height * 0.83);
   }
 
   _createRetryButton(x, y) {
@@ -184,17 +184,63 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   /**
-   * Hiển thị toast notifications cho các thành tựu vừa hoàn thành.
-   * Tạo các text object dạng golden, xuất hiện từ phải → trái, hold rồi fade.
+   * Hiển thị panel thành tựu dạng scroll cố định giữa "KẾT THÚC" và "KHOẢNG CÁCH".
+   * Panel có scroll nếu nội dung dài, hiển thị vĩnh viễn (không tự biến mất).
    * @param {Array<{id:string, name:string}>} achievements
    */
   _showAchievementToasts(achievements) {
     const { width, height } = this.scale;
-    const startY = height * 0.56;
-    const gap = 38;
+    const centerX = width / 2;
 
+    // ── Panel dimensions (cố định, nằm giữa 2 text) ──
+    const panelW = Math.min(500, width * 0.78);
+    const panelX = centerX - panelW / 2;
+    const panelTopH = height * 0.235;        // top panel (dưới KẾT THÚC)
+    const panelBotH = height * 0.345;        // bottom panel (trên KHOẢNG CÁCH)
+    const panelH = panelBotH - panelTopH;    // fixed height
+    const lineH = 30;
+
+    // ── Container ngoài: chứa background + title + scroll content ──
+    const root = this.add.container(0, 0).setDepth(90);
+
+    // ── Background panel ──
+    const bg = this.add.graphics();
+    bg.fillStyle(0x000000, 0.7);
+    bg.fillRoundedRect(panelX, panelTopH, panelW, panelH, 12);
+    bg.lineStyle(2, 0xffd700, 0.6);
+    bg.strokeRoundedRect(panelX, panelTopH, panelW, panelH, 12);
+    root.add(bg);
+
+    // ── Title (above the scroll area) ──
+    const titleY = panelTopH + 10;
+    const titleText = this.add.text(centerX, titleY, '🏆 THÀNH TỰU MỚI!', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '14px',
+      fontStyle: 'bold',
+      color: '#ffd700',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(0.5, 0);
+    root.add(titleText);
+
+    // Divider under title
+    const dividerY = titleY + 22;
+    const divider = this.add.graphics();
+    divider.lineStyle(1, 0xffd700, 0.3);
+    divider.lineBetween(panelX + 16, dividerY, panelX + panelW - 16, dividerY);
+    root.add(divider);
+
+    // ── Scrollable content area ──
+    const contentTop = dividerY + 6;
+    const contentH = panelBotH - contentTop - 6; // available content height
+
+    // Container con chứa các item (sẽ được scroll)
+    const scrollContent = this.add.container(0, 0);
+    root.add(scrollContent);
+
+    // ── Create achievement items ──
+    let totalContentH = 0;
     achievements.forEach((ach, i) => {
-      // Lấy thông tin đầy đủ từ định nghĩa
       const def = AchievementSystem.ACHIEVEMENT_DEFS.find(d => d.id === ach.id);
       if (!def) return;
 
@@ -209,39 +255,99 @@ export class GameOverScene extends Phaser.Scene {
         rewardStr += ` + Skin "${skinName}"`;
       }
 
-      const toastText = this.add.text(width + 50, startY + gap * i,
-        `🏆 ${def.icon} ${ach.name} — ${rewardStr}`, {
+      const y = contentTop + i * lineH;
+
+      // Name + icon (bên trái)
+      const nameText = this.add.text(panelX + 14, y,
+        `${def.icon} ${ach.name}`, {
           fontFamily: 'Arial, sans-serif',
-          fontSize: '16px',
+          fontSize: '13px',
           fontStyle: 'bold',
           color: '#ffd700',
           stroke: '#000000',
-          strokeThickness: 3,
-        }).setOrigin(0, 0.5).setDepth(100);
+          strokeThickness: 2,
+        }).setOrigin(0, 0);
+      scrollContent.add(nameText);
 
-      // Animation: slide in từ phải, hold, slide out
-      this.tweens.add({
-        targets: toastText,
-        x: width / 2 - toastText.width / 2,
-        duration: 500,
-        ease: 'Back.easeOut',
-        delay: i * 200, // stagger mỗi toast
-        onComplete: () => {
-          this.time.delayedCall(2500, () => {
-            if (!toastText?.active) return;
-            this.tweens.add({
-              targets: toastText,
-              alpha: 0,
-              x: toastText.x - 30,
-              duration: 500,
-              ease: 'Power2',
-              onComplete: () => {
-                if (toastText?.active) toastText.destroy();
-              },
-            });
-          });
-        },
-      });
+      // Reward (bên phải)
+      const rewardText = this.add.text(panelX + panelW - 14, y, rewardStr, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '11px',
+        fontStyle: 'bold',
+        color: '#66ff88',
+        stroke: '#000000',
+        strokeThickness: 2,
+      }).setOrigin(1, 0);
+      scrollContent.add(rewardText);
+
+      totalContentH = (y - contentTop) + lineH;
+    });
+
+    // ── GeometryMask: clip nội dung scroll trong content area ──
+    const maskShape = this.make.graphics();
+    maskShape.fillStyle(0xffffff);
+    maskShape.fillRect(panelX, contentTop, panelW, contentH);
+    maskShape.setVisible(false);
+    const mask = maskShape.createGeometryMask();
+    scrollContent.setMask(mask);
+
+    // ── Scroll state ──
+    const maxScroll = Math.max(0, totalContentH - contentH);
+    let scrollY = 0;
+    let dragStartY = 0;
+    let dragStartScroll = 0;
+    let isDragging = false;
+
+    // ── Scroll indicator (nếu cần scroll) ──
+    let drawIndicator;
+    if (maxScroll > 0) {
+      const indicatorH = Math.max(12, contentH * (contentH / totalContentH));
+      const indicatorX = panelX + panelW - 6;
+      const indicator = this.add.graphics().setDepth(92);
+      root.add(indicator);
+
+      drawIndicator = () => {
+        if (!indicator?.active) return;
+        indicator.clear();
+        const ratio = -scrollY / maxScroll;
+        const yOffset = ratio * (contentH - indicatorH);
+        indicator.fillStyle(0xffd700, 0.4);
+        indicator.fillRoundedRect(indicatorX, contentTop + yOffset, 4, indicatorH, 2);
+      };
+      drawIndicator();
+    }
+
+    // ── Scroll zone (interactive) ──
+    const scrollZone = this.add.zone(centerX, (contentTop + panelBotH) / 2, panelW, contentH)
+      .setInteractive({ useHandCursor: false })
+      .setDepth(91);
+    root.add(scrollZone);
+
+    scrollZone.on('pointerdown', (pointer) => {
+      dragStartY = pointer.y;
+      dragStartScroll = scrollY;
+      isDragging = true;
+    });
+
+    this.input.on('pointermove', (pointer) => {
+      if (!isDragging) return;
+      const dy = pointer.y - dragStartY;
+      scrollY = Phaser.Math.Clamp(dragStartScroll - dy, -maxScroll, 0);
+      scrollContent.y = scrollY;
+      if (drawIndicator) drawIndicator();
+    });
+
+    this.input.on('pointerup', () => {
+      isDragging = false;
+    });
+
+    // ── Animation: fade-in (không auto-destroy, giữ vĩnh viễn) ──
+    root.setAlpha(0);
+    this.tweens.add({
+      targets: root,
+      alpha: 1,
+      duration: 400,
+      ease: 'Power2',
     });
   }
 
