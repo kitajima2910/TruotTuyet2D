@@ -106,7 +106,6 @@ export class PlayScene extends Phaser.Scene {
       ms = new MissionSystem();
       ms.setRegistry(this.game.registry);
       MissionSystem.register(this.game.registry, ms);
-      ScoreSystem.setMissionSystem(ms);
     }
     ms.loadMissions();
     this._missionSystem = ms;
@@ -230,6 +229,23 @@ export class PlayScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Gửi mission progress và completion events cho MissionLogDisplay.
+   * @param {Array} changes — từ MissionSystem.updateProgress()
+   */
+  _emitMissionChanges(changes) {
+    if (!changes || changes.length === 0) return;
+    for (const c of changes) {
+      if (c.justCompleted) {
+        const def = MissionSystem.MISSION_DEFS.find(d => d.id === c.id);
+        const reward = def ? def.reward : 0;
+        this.game.events.emit('missionComplete', c.name, reward);
+      } else {
+        this.game.events.emit('missionProgress', c.name, c.progress, c.target);
+      }
+    }
+  }
+
   /* ══════════════════════════════════════════════
      UPDATE
      ══════════════════════════════════════════════ */
@@ -341,7 +357,10 @@ export class PlayScene extends Phaser.Scene {
       coin.recycle();
       const idx = this._spawnSystem._activeCoins.indexOf(coin);
       if (idx !== -1) this._spawnSystem._activeCoins.splice(idx, 1);
-      this._scoreSystem.addCoin(); // Gọi addCoin → bên trong gửi COIN_COLLECTED đến MissionSystem
+      this._scoreSystem.addCoin();
+      // Mission: COIN_COLLECTED
+      const coinChanges = this._missionSystem?.updateProgress('COIN_COLLECTED', 1);
+      this._emitMissionChanges(coinChanges);
       this.game.events.emit('coinUpdate', this._scoreSystem.getCoinCount());
 
       // SFX + sparkle
@@ -352,15 +371,26 @@ export class PlayScene extends Phaser.Scene {
     if (boost) {
       boost.trigger();
       this._activateBoost();
+      // Lấy kết quả thay đổi từ BOOST_USED để gửi toast
+      const changes = this._missionSystem?.updateProgress('BOOST_USED', 1);
+      this._emitMissionChanges(changes);
       AudioManager.get(this.game.registry)?.playSFX('sfx-boost');
     }
 
     // 11. Score
     this._scoreSystem.update(effectiveSpeed, delta);
 
+    // 11a. Mission: DISTANCE_CHANGED (khi floor score tăng)
+    const dist = this._scoreSystem.checkDistanceChange();
+    if (dist.changed) {
+      const distChanges = this._missionSystem?.updateProgress('DISTANCE_CHANGED', dist.floor);
+      this._emitMissionChanges(distChanges);
+    }
+
     // 12. Mission: TIME_SURVIVED (cập nhật mỗi frame)
     this._survivalTime += delta / 1000;
-    this._missionSystem?.updateProgress('TIME_SURVIVED', Math.floor(this._survivalTime));
+    const timeChanges = this._missionSystem?.updateProgress('TIME_SURVIVED', Math.floor(this._survivalTime));
+    this._emitMissionChanges(timeChanges);
 
     // 13. Emit UI events
     this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
@@ -479,9 +509,6 @@ export class PlayScene extends Phaser.Scene {
     this._player.sprite.setTint(0xaaffaa);
     this._setBoostGlow(true);
     this.game.events.emit('boostUpdate', this._boostTimer);
-
-    // Mission: BOOST_USED
-    this._missionSystem?.updateProgress('BOOST_USED', 1);
   }
 
   _updateBoost(delta) {
@@ -619,7 +646,7 @@ export class PlayScene extends Phaser.Scene {
 
     this._player.sprite.play('player-collision');
 
-    // Mission: GAME_COMPLETED
+    // Mission: GAME_COMPLETED (thay đổi cuối cùng, không cần toast)
     this._missionSystem?.updateProgress('GAME_COMPLETED', 1);
 
     this._player.sprite.once('animationcomplete', () => {

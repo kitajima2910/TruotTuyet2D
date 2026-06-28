@@ -112,6 +112,7 @@ export class MissionSystem {
       ...def,
       progress: 0,
     }));
+
   }
 
   /**
@@ -135,12 +136,17 @@ export class MissionSystem {
    *
    * @param {string} eventType — DISTANCE_CHANGED | COIN_COLLECTED | BOOST_USED | TIME_SURVIVED | GAME_COMPLETED
    * @param {number} value — giá trị cập nhật
+   * @returns {Array<{id:string, name:string, progress:number, target:number, justCompleted:boolean}>}
+   *   Danh sách các mission có thay đổi, để gửi toast notification.
    */
   updateProgress(eventType, value) {
     const isCumulative = CUMULATIVE_EVENTS.includes(eventType);
+    const changed = [];
 
     for (const m of this._missions) {
       if (m.eventType !== eventType) continue;
+
+      const oldProgress = m.progress;
       if (isCumulative) {
         // SET: progress là tổng tích luỹ
         m.progress = Math.min(value, m.target);
@@ -148,7 +154,21 @@ export class MissionSystem {
         // ADD: cộng dồn
         m.progress = Math.min(m.progress + value, m.target);
       }
+
+      if (m.progress !== oldProgress) {
+        const oldCompleted = oldProgress >= m.target;
+        const newCompleted = m.progress >= m.target;
+        changed.push({
+          id: m.id,
+          name: m.name,
+          progress: m.progress,
+          target: m.target,
+          justCompleted: !oldCompleted && newCompleted,
+        });
+      }
     }
+
+    return changed;
   }
 
   /**

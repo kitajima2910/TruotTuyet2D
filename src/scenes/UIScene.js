@@ -18,6 +18,7 @@
  */
 
 import { MissionPanel } from '../ui/MissionPanel.js';
+import { MissionLogDisplay } from '../ui/MissionLogDisplay.js';
 
 export class UIScene extends Phaser.Scene {
   constructor() {
@@ -193,6 +194,13 @@ export class UIScene extends Phaser.Scene {
     this._missionPanel = new MissionPanel(this);
     this._missionPanel.hide();
 
+    // ── MissionLogDisplay (toast notifications) ──
+    this._missionLog = new MissionLogDisplay(this);
+
+    // Lắng nghe mission events từ PlayScene
+    this.game.events.on('missionProgress', this._onMissionProgress, this);
+    this.game.events.on('missionComplete', this._onMissionComplete, this);
+
     // Cập nhật icon âm thanh ban đầu
     this._refreshSoundIcon();
   }
@@ -347,6 +355,24 @@ export class UIScene extends Phaser.Scene {
   }
 
   /* ───────────────────────────────────────────
+   *  MISSION EVENTS (toast log)
+   * ─────────────────────────────────────────── */
+
+  /** @param {string} name @param {number} progress @param {number} target */
+  _onMissionProgress(name, progress, target) {
+    if (this._missionLog) {
+      this._missionLog.showProgress(name, progress, target);
+    }
+  }
+
+  /** @param {string} name @param {number} reward */
+  _onMissionComplete(name, reward) {
+    if (this._missionLog) {
+      this._missionLog.showComplete(name, reward);
+    }
+  }
+
+  /* ───────────────────────────────────────────
    *  MISSIONS PANEL
    * ─────────────────────────────────────────── */
 
@@ -403,6 +429,8 @@ export class UIScene extends Phaser.Scene {
     this.game.events.off('bestScoreUpdate', this._onBestScore, this);
     this.game.events.off('pauseState', this._onPause, this);
     this.game.events.off('soundUpdate', this._onSoundUpdate, this);
+    this.game.events.off('missionProgress', this._onMissionProgress, this);
+    this.game.events.off('missionComplete', this._onMissionComplete, this);
   }
 
   shutdown() {
@@ -410,6 +438,10 @@ export class UIScene extends Phaser.Scene {
     if (this._missionPanel) {
       this._missionPanel.destroy();
       this._missionPanel = null;
+    }
+    if (this._missionLog) {
+      this._missionLog.destroy();
+      this._missionLog = null;
     }
   }
 }

@@ -22,9 +22,6 @@ export class ScoreSystem {
   /** @type {import('../profile/PlayerProfile.js').PlayerProfile|null} */
   static _profile = null;
 
-  /** @type {import('./MissionSystem.js').MissionSystem|null} */
-  static _missionSystem = null;
-
   /**
    * Gán profile toàn cục cho ScoreSystem (gọi từ Game.js).
    * Cho phép PlayScene giữ nguyên `new ScoreSystem()`.
@@ -35,14 +32,6 @@ export class ScoreSystem {
   }
 
   /**
-   * Gán MissionSystem toàn cục cho ScoreSystem.
-   * @param {import('./MissionSystem.js').MissionSystem} ms
-   */
-  static setMissionSystem(ms) {
-    ScoreSystem._missionSystem = ms;
-  }
-
-  /**
    * Gọi mỗi frame từ PlayScene.update()
    * @param {number} scrollSpeed — vận tốc cuộn (px/s)
    * @param {number} delta — ms kể từ frame trước
@@ -50,13 +39,18 @@ export class ScoreSystem {
   update(scrollSpeed, delta) {
     const dt = delta / 1000;
     this._score += scrollSpeed * dt;
+  }
 
-    // Mission: DISTANCE_CHANGED (cập nhật khi floor score thay đổi)
-    const currentFloor = Math.floor(this._score);
-    if (currentFloor !== this._lastMissionDist) {
-      this._lastMissionDist = currentFloor;
-      ScoreSystem._missionSystem?.updateProgress('DISTANCE_CHANGED', currentFloor);
-    }
+  /**
+   * Trả về floor score hiện tại, kèm flag nếu vừa tăng lên.
+   * Dùng để PlayScene phát hiện thay đổi distance cho mission toast.
+   * @returns {{ floor: number, changed: boolean }}
+   */
+  checkDistanceChange() {
+    const floor = Math.floor(this._score);
+    const changed = floor !== this._lastMissionDist;
+    if (changed) this._lastMissionDist = floor;
+    return { floor, changed };
   }
 
   /** Lấy điểm hiện tại (làm tròn nguyên) — Distance Score */
@@ -72,8 +66,6 @@ export class ScoreSystem {
   /** Cộng dồn số xu đã thu thập */
   addCoin() {
     this._coinCount++;
-    // Mission: COIN_COLLECTED
-    ScoreSystem._missionSystem?.updateProgress('COIN_COLLECTED', 1);
   }
 
   /** Lấy số xu đã thu thập */
