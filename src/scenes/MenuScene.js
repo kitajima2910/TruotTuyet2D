@@ -4,6 +4,7 @@
  */
 
 import { DailyRewardPanel } from '../ui/DailyRewardPanel.js';
+import { GAME_VERSION, COMMIT_HASH } from '../version.js';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -87,7 +88,7 @@ export class MenuScene extends Phaser.Scene {
 
     // ── Phiên bản game (git commit count + hash) ──
     this.add
-      .text(centerX, height * 0.985, "v40 (ee7b3ee)", {
+      .text(centerX, height * 0.985, `${GAME_VERSION} (${COMMIT_HASH})`, {
         fontFamily: "Arial, sans-serif",
         fontSize: "11px",
         color: "#8899bb",
