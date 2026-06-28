@@ -131,8 +131,6 @@ export class MenuScene extends Phaser.Scene {
     // ── Nút Daily Reward ──
     this._createDailyRewardButton(centerX, height * 0.91);
 
-    // ── Tự động hiển thị panel nếu đủ điều kiện ──
-    this._checkAndShowDailyReward();
   }
 
   /**
@@ -168,24 +166,6 @@ export class MenuScene extends Phaser.Scene {
         this._dailyRewardPanel.show();
       }
     });
-  }
-
-  /**
-   * Kiểm tra và tự động hiển thị DailyRewardPanel nếu đủ điều kiện.
-   * Chỉ show một lần khi vào menu, không tự động nhận thưởng.
-   */
-  _checkAndShowDailyReward() {
-    const dailySystem = this.game.registry.get('dailyRewardSystem');
-    if (!dailySystem) return;
-
-    // Delay nhẹ để menu render xong trước khi hiện panel
-    if (dailySystem.canClaim()) {
-      this.time.delayedCall(600, () => {
-        if (this._dailyRewardPanel && !this._dailyRewardPanel.isVisible()) {
-          this._dailyRewardPanel.show();
-        }
-      });
-    }
   }
 
   /**
