@@ -16,13 +16,32 @@ export class GameOverScene extends Phaser.Scene {
   init(data) {
     this._score = data?.score ?? 0;
     this._coins = data?.coins ?? 0;
-    this._bestScore = data?.bestScore ?? 0;
     this._level = data?.level ?? 1;
+
+    // Lấy bestScore từ PlayerProfile — nguồn dữ liệu duy nhất
+    const profile = this.game.registry.get('playerProfile');
+    this._bestScore = profile ? profile.bestScore : (data?.bestScore ?? 0);
   }
 
   create() {
     const { width, height } = this.scale;
     const centerX = width / 2;
+
+    // Đảm bảo bestScore trong profile đã được cập nhật (ScoreSystem.saveBestScore đã xử lý)
+    // và lưu dữ liệu qua SaveManager
+    const profile = this.game.registry.get('playerProfile');
+    if (profile) {
+      // Đồng bộ bestScore hiển thị với profile (phòng trường hợp saveBestScore chưa kịp chạy)
+      if (this._score > profile.bestScore) {
+        profile.bestScore = this._score;
+        this._bestScore = this._score;
+      } else {
+        this._bestScore = profile.bestScore;
+      }
+      // Lưu ngay qua SaveManager
+      const sm = this.game.registry.get('saveManager');
+      if (sm) sm.save();
+    }
 
     // Tắt UIScene nếu còn sót từ gameplay trước
     if (this.scene.isActive('UIScene')) {

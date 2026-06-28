@@ -23,6 +23,7 @@ import { ScoreSystem } from '../systems/ScoreSystem.js';
 import { DifficultySystem } from '../systems/DifficultySystem.js';
 import { AudioManager } from '../managers/AudioManager.js';
 import { AssetManager } from '../managers/AssetManager.js';
+import { MissionSystem } from '../systems/MissionSystem.js';
 
 // ── Cấu hình độ khó theo level ──
 const LEVEL_CONFIG = {
@@ -96,6 +97,19 @@ export class PlayScene extends Phaser.Scene {
     this._lives = 3;
     this._invincible = false;
     this._invincibleTimer = 0;
+
+    // ── Mission tracking ──
+    this._survivalTime = 0;
+    // Khởi tạo MissionSystem nếu chưa có (lần đầu vào game)
+    let ms = MissionSystem.get(this.game.registry);
+    if (!ms) {
+      ms = new MissionSystem();
+      ms.setRegistry(this.game.registry);
+      MissionSystem.register(this.game.registry, ms);
+      ScoreSystem.setMissionSystem(ms);
+    }
+    ms.loadMissions();
+    this._missionSystem = ms;
 
     // ── Stagger state ──
     this._staggered = false;
@@ -327,7 +341,7 @@ export class PlayScene extends Phaser.Scene {
       coin.recycle();
       const idx = this._spawnSystem._activeCoins.indexOf(coin);
       if (idx !== -1) this._spawnSystem._activeCoins.splice(idx, 1);
-      this._scoreSystem.addCoin();
+      this._scoreSystem.addCoin(); // Gọi addCoin → bên trong gửi COIN_COLLECTED đến MissionSystem
       this.game.events.emit('coinUpdate', this._scoreSystem.getCoinCount());
 
       // SFX + sparkle
@@ -344,7 +358,11 @@ export class PlayScene extends Phaser.Scene {
     // 11. Score
     this._scoreSystem.update(effectiveSpeed, delta);
 
-    // 12. Emit UI events
+    // 12. Mission: TIME_SURVIVED (cập nhật mỗi frame)
+    this._survivalTime += delta / 1000;
+    this._missionSystem?.updateProgress('TIME_SURVIVED', Math.floor(this._survivalTime));
+
+    // 13. Emit UI events
     this.game.events.emit('scoreUpdate', this._scoreSystem.getScore());
     this.game.events.emit('bestScoreUpdate', this._scoreSystem.getBestScore());
     this.game.events.emit('boostUpdate', this._boosted ? this._boostTimer : null);
@@ -461,6 +479,9 @@ export class PlayScene extends Phaser.Scene {
     this._player.sprite.setTint(0xaaffaa);
     this._setBoostGlow(true);
     this.game.events.emit('boostUpdate', this._boostTimer);
+
+    // Mission: BOOST_USED
+    this._missionSystem?.updateProgress('BOOST_USED', 1);
   }
 
   _updateBoost(delta) {
@@ -597,6 +618,9 @@ export class PlayScene extends Phaser.Scene {
     this._showDeathFlash();
 
     this._player.sprite.play('player-collision');
+
+    // Mission: GAME_COMPLETED
+    this._missionSystem?.updateProgress('GAME_COMPLETED', 1);
 
     this._player.sprite.once('animationcomplete', () => {
       this.time.delayedCall(1200, () => {

@@ -14,7 +14,10 @@
  * Điều khiển:
  *   - ESC / Nút Pause → Tạm dừng
  *   - Nút Sound → Bật/tắt âm thanh
+ *   - Nút Missions → Mở MissionPanel
  */
+
+import { MissionPanel } from '../ui/MissionPanel.js';
 
 export class UIScene extends Phaser.Scene {
   constructor() {
@@ -137,6 +140,9 @@ export class UIScene extends Phaser.Scene {
     // Sound Toggle (trái dưới)
     this._soundBtn = this._mkCircleBtn(P + btnR, bottomY, btnR, '🔊', () => this._toggleSound());
 
+    // Missions (giữa dưới)
+    this._missionBtn = this._mkCircleBtn(width / 2, bottomY, btnR, '📋', () => this._toggleMissions());
+
     // Pause (phải dưới)
     this._pauseBtn = this._mkCircleBtn(width - P - btnR, bottomY, btnR, '⏸', () => this._togglePause());
 
@@ -182,6 +188,10 @@ export class UIScene extends Phaser.Scene {
     // ESC key
     this._escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
     this._escKey.on('down', () => this._togglePause());
+
+    // ── MissionPanel ──
+    this._missionPanel = new MissionPanel(this);
+    this._missionPanel.hide();
 
     // Cập nhật icon âm thanh ban đầu
     this._refreshSoundIcon();
@@ -337,6 +347,21 @@ export class UIScene extends Phaser.Scene {
   }
 
   /* ───────────────────────────────────────────
+   *  MISSIONS PANEL
+   * ─────────────────────────────────────────── */
+
+  _toggleMissions() {
+    if (this._missionPanel) {
+      // Không cho mở mission khi đang pause
+      if (!this._missionPanel.isVisible()) {
+        const ps = this.scene.get('PlayScene');
+        if (ps && ps._paused && !ps._isDead) return;
+      }
+      this._missionPanel.toggle();
+    }
+  }
+
+  /* ───────────────────────────────────────────
    *  PAUSE / RESUME
    * ─────────────────────────────────────────── */
 
@@ -382,5 +407,9 @@ export class UIScene extends Phaser.Scene {
 
   shutdown() {
     this._cleanup();
+    if (this._missionPanel) {
+      this._missionPanel.destroy();
+      this._missionPanel = null;
+    }
   }
 }
