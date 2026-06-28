@@ -659,6 +659,7 @@ export class PlayScene extends Phaser.Scene {
           bestScore: this._scoreSystem.getBestScore(),
           level: this._level,
           boostUsed: this._scoreSystem.getBoostUsed(),
+          playTime: Math.floor(this._survivalTime),
         });
       });
     });

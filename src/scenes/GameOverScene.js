@@ -4,6 +4,8 @@
  * Nhận dữ liệu từ PlayScene qua init(data).
  */
 
+import { AchievementSystem } from '../systems/AchievementSystem.js';
+
 export class GameOverScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameOverScene' });
@@ -11,13 +13,14 @@ export class GameOverScene extends Phaser.Scene {
 
   /**
    * Nhận dữ liệu từ PlayScene
-   * @param {{ score: number, coins: number, bestScore: number, level: number, boostUsed?: number }} data
+   * @param {{ score: number, coins: number, bestScore: number, level: number, boostUsed?: number, playTime?: number }} data
    */
   init(data) {
     this._score = data?.score ?? 0;
     this._coins = data?.coins ?? 0;
     this._level = data?.level ?? 1;
     this._boostUsed = data?.boostUsed ?? 0;
+    this._playTime = data?.playTime ?? 0;
 
     // Lấy bestScore từ PlayerProfile — nguồn dữ liệu duy nhất
     const profile = this.game.registry.get('playerProfile');
@@ -149,25 +152,97 @@ export class GameOverScene extends Phaser.Scene {
     profile.totalCoinsCollected += this._coins;
     profile.totalBoostUsed += this._boostUsed;
     profile.totalGamesPlayed += 1;
-    // totalPlayTime ước lượng = (score / avgSpeed), tạm thời +30s mỗi game
-    profile.totalPlayTime += 30;
+    profile.totalPlayTime += this._playTime;
 
     // highestSingleRun — chỉ ghi nếu score lần này cao hơn
     if (this._score > profile.highestSingleRun) {
       profile.highestSingleRun = this._score;
     }
 
-    // Thông báo AchievementSystem
+    // Thông báo AchievementSystem và thu thập các thành tựu vừa hoàn thành
     const achievementSystem = this.game.registry.get('achievementSystem');
+    const newlyCompleted = [];
+
     if (achievementSystem) {
-      achievementSystem.updateProgress('LIFETIME_DISTANCE_CHANGED', profile.totalDistance);
-      achievementSystem.updateProgress('LIFETIME_COIN_COLLECTED', profile.totalCoinsCollected);
-      achievementSystem.updateProgress('BOOST_USED', profile.totalBoostUsed);
-      achievementSystem.updateProgress('GAME_FINISHED', profile.totalGamesPlayed);
-      achievementSystem.updateProgress('HIGHEST_SCORE_UPDATED', profile.highestSingleRun);
+      const collectJustCompleted = (changes) => {
+        for (const c of changes) {
+          if (c.justCompleted) newlyCompleted.push(c);
+        }
+      };
+
+      collectJustCompleted(achievementSystem.updateProgress('LIFETIME_DISTANCE_CHANGED', profile.totalDistance));
+      collectJustCompleted(achievementSystem.updateProgress('LIFETIME_COIN_COLLECTED', profile.totalCoinsCollected));
+      collectJustCompleted(achievementSystem.updateProgress('BOOST_USED', profile.totalBoostUsed));
+      collectJustCompleted(achievementSystem.updateProgress('GAME_FINISHED', profile.totalGamesPlayed));
+      collectJustCompleted(achievementSystem.updateProgress('HIGHEST_SCORE_UPDATED', profile.highestSingleRun));
     }
 
-    // Lưu qua SaveManager (đã được lưu ở create())
+    // Hiển thị toast cho các thành tựu vừa hoàn thành
+    if (newlyCompleted.length > 0) {
+      this._showAchievementToasts(newlyCompleted);
+    }
+  }
+
+  /**
+   * Hiển thị toast notifications cho các thành tựu vừa hoàn thành.
+   * Tạo các text object dạng golden, xuất hiện từ phải → trái, hold rồi fade.
+   * @param {Array<{id:string, name:string}>} achievements
+   */
+  _showAchievementToasts(achievements) {
+    const { width, height } = this.scale;
+    const startY = height * 0.56;
+    const gap = 38;
+
+    achievements.forEach((ach, i) => {
+      // Lấy thông tin đầy đủ từ định nghĩa
+      const def = AchievementSystem.ACHIEVEMENT_DEFS.find(d => d.id === ach.id);
+      if (!def) return;
+
+      let rewardStr = `+${def.rewardCoins} Xu`;
+      if (def.rewardSkin) {
+        const skinSystem = this.game.registry.get('skinSystem');
+        let skinName = def.rewardSkin;
+        if (skinSystem) {
+          const skin = skinSystem.getSkins().find(s => s.id === def.rewardSkin);
+          if (skin) skinName = skin.name;
+        }
+        rewardStr += ` + Skin "${skinName}"`;
+      }
+
+      const toastText = this.add.text(width + 50, startY + gap * i,
+        `🏆 ${def.icon} ${ach.name} — ${rewardStr}`, {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '16px',
+          fontStyle: 'bold',
+          color: '#ffd700',
+          stroke: '#000000',
+          strokeThickness: 3,
+        }).setOrigin(0, 0.5).setDepth(100);
+
+      // Animation: slide in từ phải, hold, slide out
+      this.tweens.add({
+        targets: toastText,
+        x: width / 2 - toastText.width / 2,
+        duration: 500,
+        ease: 'Back.easeOut',
+        delay: i * 200, // stagger mỗi toast
+        onComplete: () => {
+          this.time.delayedCall(2500, () => {
+            if (!toastText?.active) return;
+            this.tweens.add({
+              targets: toastText,
+              alpha: 0,
+              x: toastText.x - 30,
+              duration: 500,
+              ease: 'Power2',
+              onComplete: () => {
+                if (toastText?.active) toastText.destroy();
+              },
+            });
+          });
+        },
+      });
+    });
   }
 
   _createMenuButton(x, y) {
