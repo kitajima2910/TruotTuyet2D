@@ -147,19 +147,19 @@ export class PlayScene extends Phaser.Scene {
     });
     this._trailEmitter.setDepth(5);
 
-    // ── Boost glow particles (khởi tạo tắt) ──
-    this._boostGlow = this.add.particles(0, 0, 'particle-glow', {
-      follow: undefined,
-      frequency: 60,
-      lifespan: 500,
-      scale: { start: 0.8, end: 0.2 },
-      alpha: { start: 0.6, end: 0 },
-      speed: { min: 10, max: 40 },
-      angle: { min: 0, max: 360 },
+    // ── Boost flame particles — ngọn lửa phía sau ván trượt ──
+    this._boostFlame = this.add.particles(0, 0, 'particle-flame', {
+      frequency: 30,
+      lifespan: 400,
+      scale: { start: 1.0, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      speed: { min: 80, max: 200 },
+      angle: { min: 70, max: 110 }, // hướng xuống dưới (phía sau ván trượt)
       blendMode: 'ADD',
+      tint: [0xff4400, 0xff8800, 0xffcc00, 0xffee00], // cam-đỏ-vàng
       emitting: false,
     });
-    this._boostGlow.setDepth(9);
+    this._boostFlame.setDepth(9);
 
     // ── InputSystem ──
     this._input = new InputSystem(this);
@@ -488,10 +488,14 @@ export class PlayScene extends Phaser.Scene {
    */
   _setBoostGlow(on) {
     if (on) {
-      this._boostGlow.start();
-      this._boostGlow.setPosition(this._player.sprite.x, this._player.sprite.y);
+      this._boostFlame.start();
+      // Phát lửa từ phía sau ván trượt (dưới chân player)
+      this._boostFlame.setPosition(
+        this._player.sprite.x,
+        this._player.sprite.y + this._player.sprite.displayHeight * 0.48,
+      );
     } else {
-      this._boostGlow.stop();
+      this._boostFlame.stop();
     }
   }
 
@@ -542,7 +546,6 @@ export class PlayScene extends Phaser.Scene {
   _activateBoost() {
     this._boosted = true;
     this._boostTimer = BOOST_DURATION;
-    this._player.sprite.setTint(0xaaffaa);
     this._setBoostGlow(true);
     this.game.events.emit('boostUpdate', this._boostTimer);
   }
@@ -550,13 +553,16 @@ export class PlayScene extends Phaser.Scene {
   _updateBoost(delta) {
     if (!this._boosted) return;
 
+    // Flame follow player liên tục — giữ sát chân ván trượt
+    this._boostFlame.setPosition(
+      this._player.sprite.x,
+      this._player.sprite.y + this._player.sprite.displayHeight * 0.48,
+    );
+
     this._boostTimer -= delta;
     if (this._boostTimer <= 0) {
       this._boosted = false;
       this._boostTimer = 0;
-      this._player.sprite.clearTint();
-      // Khôi phục skin tint sau khi boost kết thúc
-      if (this._skinTint) this._player.sprite.setTint(this._skinTint);
       this._setBoostGlow(false);
       this.game.events.emit('boostUpdate', null);
     } else {
@@ -646,9 +652,6 @@ export class PlayScene extends Phaser.Scene {
     if (this._boosted) {
       this._boosted = false;
       this._boostTimer = 0;
-      this._player.sprite.clearTint();
-      // Khôi phục skin tint sau khi mất boost do va chạm
-      if (this._skinTint) this._player.sprite.setTint(this._skinTint);
       this._setBoostGlow(false);
       this.game.events.emit('boostUpdate', null);
     }
@@ -674,9 +677,6 @@ export class PlayScene extends Phaser.Scene {
     // Tắt boost
     this._boosted = false;
     this._boostTimer = 0;
-    this._player.sprite.clearTint();
-    // Khôi phục skin tint (cho animation chết hiển thị đúng skin)
-    if (this._skinTint) this._player.sprite.setTint(this._skinTint);
     this._setBoostGlow(false);
     this.game.events.emit('boostUpdate', null);
 
@@ -768,7 +768,7 @@ export class PlayScene extends Phaser.Scene {
     // Dọn particle emitters
     if (this._snowEmitter) this._snowEmitter.destroy();
     if (this._trailEmitter) this._trailEmitter.destroy();
-    if (this._boostGlow) this._boostGlow.destroy();
+    if (this._boostFlame) this._boostFlame.destroy();
 
     // Dọn flash overlays
     if (this._hitFlash) this._hitFlash.destroy();

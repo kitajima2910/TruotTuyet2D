@@ -58,6 +58,17 @@ export class AssetManager {
       gfx.destroy();
     }
 
+    // ── Flame particle: 12×12 warm-white circle (tint-friendly) ──
+    if (!scene.textures.exists('particle-flame')) {
+      const gfx = scene.make.graphics({ add: false });
+      gfx.fillStyle(0xffeedd, 1);
+      gfx.fillCircle(6, 6, 6);
+      gfx.fillStyle(0xffffff, 0.6);
+      gfx.fillCircle(6, 6, 4);
+      gfx.generateTexture('particle-flame', 12, 12);
+      gfx.destroy();
+    }
+
     // ── Flash particle: 20×20 white burst ──
     if (!scene.textures.exists('particle-flash')) {
       const gfx = scene.make.graphics({ add: false });

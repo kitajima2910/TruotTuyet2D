@@ -79,5 +79,7 @@ export function createGame(parentId = 'game-container') {
   DailyRewardSystem.register(game.registry, dailyRewardSystem);
   dailyRewardSystem.initialize();
 
+  // Debug: expose game instance
+  window.__game = game;
   return game;
 }
