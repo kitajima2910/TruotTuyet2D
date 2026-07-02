@@ -181,6 +181,17 @@ export class PlayScene extends Phaser.Scene {
       }
     }
 
+    // ── Lắng nghe sự kiện đổi skin từ Shop ──
+    this._onSkinChanged = (skinId) => {
+      this._skinTint = skinSystem.getSkinTint(skinId);
+      if (this._skinTint) {
+        this._player.sprite.setTint(this._skinTint);
+      } else {
+        this._player.sprite.clearTint();
+      }
+    };
+    this.game.events.on('skinChanged', this._onSkinChanged);
+
     // ── SpawnSystem ──
     this._spawnSystem = new SpawnSystem(this, {
       scrollSpeed: this.scrollSpeed,
@@ -757,6 +768,12 @@ export class PlayScene extends Phaser.Scene {
     // Dừng âm thanh
     const audio = AudioManager.get(this.game.registry);
     if (audio) audio.stopBGM();
+
+    // Dọn event listener skin
+    if (this._onSkinChanged) {
+      this.game.events.off('skinChanged', this._onSkinChanged);
+      this._onSkinChanged = null;
+    }
 
     if (this.scene.isActive('UIScene')) {
       this.scene.stop('UIScene');

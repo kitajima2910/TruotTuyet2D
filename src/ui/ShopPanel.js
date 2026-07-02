@@ -394,6 +394,8 @@ export class ShopPanel {
     this._showToast(result.message, result.success);
     if (result.success) {
       this._refresh();
+      // Thông báo cho PlayScene cập nhật skin ngay lập tức
+      this.scene.game.events.emit('skinChanged', skinId);
     }
   }
 
@@ -407,6 +409,8 @@ export class ShopPanel {
     this._showToast(result.message, result.success);
     if (result.success) {
       this._refresh();
+      // Thông báo cho PlayScene cập nhật skin ngay lập tức
+      this.scene.game.events.emit('skinChanged', skinId);
     }
   }
 
