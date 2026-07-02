@@ -236,21 +236,34 @@ export class ShopPanel {
     this._listContainer.add(bg);
     elements.push(bg);
 
-    // ── Color preview (ô vuông nhỏ) ──
-    const tint = this._getSkinTint(item.id);
+    // ── Preview ──
     const previewX = px - pw / 2 + 32;
     const previewY = y + (this._itemH - 6) / 2;
-    const preview = scene.add.graphics();
-    if (tint) {
-      preview.fillStyle(tint, 1);
+
+    if (item.id === 'default') {
+      // Skin mặc định: hiển thị animation từ phai spritesheet
+      const animSprite = scene.add.sprite(previewX, previewY, 'player-shop-p1');
+      if (scene.anims.exists('player-shop-preview')) {
+        animSprite.play('player-shop-preview');
+      }
+      animSprite.setScale(0.65);
+      this._listContainer.add(animSprite);
+      elements.push(animSprite);
     } else {
-      preview.lineStyle(2, 0xffffff, 0.4);
-      preview.strokeCircle(previewX, previewY, 12);
-      preview.fillStyle(0xffffff, 0.15);
+      // Skin khác: hiển thị vòng tròn màu
+      const tint = this._getSkinTint(item.id);
+      const preview = scene.add.graphics();
+      if (tint) {
+        preview.fillStyle(tint, 1);
+      }
+      preview.fillCircle(previewX, previewY, 12);
+      if (!tint) {
+        preview.lineStyle(2, 0xffffff, 0.4);
+        preview.strokeCircle(previewX, previewY, 12);
+      }
+      this._listContainer.add(preview);
+      elements.push(preview);
     }
-    preview.fillCircle(previewX, previewY, 12);
-    this._listContainer.add(preview);
-    elements.push(preview);
 
     // ── Tên skin ──
     const nameX = px - pw / 2 + 58;

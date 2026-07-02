@@ -20,10 +20,32 @@ export class BootScene extends Phaser.Scene {
       const idx = String(i).padStart(2, '0');
       this.load.image(`ntload-${idx}`, `assets/nt-loading/nt${idx}.png`);
     }
+
+    // ── Player shop preview (phai spritesheet) ──
+    // Load sẵn 4 frame phai để cửa hàng hiển thị animation skin mặc định
+    this.load.image('player-shop-p1', 'assets/player/phai/p1.png');
+    this.load.image('player-shop-p2', 'assets/player/phai/p2.png');
+    this.load.image('player-shop-p3', 'assets/player/phai/p3.png');
+    this.load.image('player-shop-p4', 'assets/player/phai/p4.png');
   }
 
   create() {
-    // Chuyển ngay sang MenuScene — không tạo animation gì ở đây
+    // ── Tạo animation preview cho cửa hàng (phai spritesheet) ──
+    if (!this.anims.exists('player-shop-preview')) {
+      this.anims.create({
+        key: 'player-shop-preview',
+        frames: [
+          { key: 'player-shop-p1' },
+          { key: 'player-shop-p2' },
+          { key: 'player-shop-p3' },
+          { key: 'player-shop-p4' },
+        ],
+        frameRate: 6,
+        repeat: -1, // loop vô hạn
+      });
+    }
+
+    // Chuyển ngay sang MenuScene
     this.scene.start('MenuScene');
   }
 }
