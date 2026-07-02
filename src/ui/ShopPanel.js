@@ -17,13 +17,13 @@
 
 // Màu sắc
 const C = {
-  gold: '#ffd700',
-  green: '#66ff88',
-  cyan: '#88ccff',
-  white: '#ffffff',
-  red: '#ff6666',
-  textDim: '#8899aa',
-  textMuted: '#556677',
+  gold: "#ffd700",
+  green: "#66ff88",
+  cyan: "#88ccff",
+  white: "#ffffff",
+  red: "#ff6666",
+  textDim: "#8899aa",
+  textMuted: "#556677",
 };
 
 export class ShopPanel {
@@ -35,8 +35,8 @@ export class ShopPanel {
     this.scene = scene;
     this._onVisibilityChange = onVisibilityChange;
     this._visible = false;
-    this._shopSystem = scene.game.registry.get('shopSystem');
-    this._skinSystem = scene.game.registry.get('skinSystem');
+    this._shopSystem = scene.game.registry.get("shopSystem");
+    this._skinSystem = scene.game.registry.get("skinSystem");
     this._items = [];
     this._tweens = [];
 
@@ -46,9 +46,16 @@ export class ShopPanel {
     const { width, height } = scene.scale;
 
     // ── Backdrop mờ ──
-    this._bg = scene.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.6);
+    this._bg = scene.add.rectangle(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      0x000000,
+      0.6,
+    );
     this._bg.setInteractive();
-    this._bg.on('pointerdown', () => this.hide());
+    this._bg.on("pointerdown", () => this.hide());
     this._container.add(this._bg);
 
     // ── Panel nền ──
@@ -65,41 +72,53 @@ export class ShopPanel {
     panelBg.lineStyle(1.5, 0x3a3a7a, 0.7);
     panelBg.strokeRoundedRect(px - pw / 2, py - ph / 2, pw, ph, 18);
     panelBg.fillStyle(0x2a2a6a, 0.12);
-    panelBg.fillRoundedRect(px - pw / 2, py - ph / 2, pw, 60, { tl: 18, tr: 18, bl: 0, br: 0 });
+    panelBg.fillRoundedRect(px - pw / 2, py - ph / 2, pw, 60, {
+      tl: 18,
+      tr: 18,
+      bl: 0,
+      br: 0,
+    });
     this._container.add(panelBg);
 
     // ── Nút đóng ──
-    const closeBtn = scene.add.text(px + pw / 2 - 14, py - ph / 2 + 12, '✕', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '20px',
-      fontStyle: 'bold',
-      color: '#778899',
-    }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
-    closeBtn.on('pointerdown', () => this.hide());
-    closeBtn.on('pointerover', () => closeBtn.setColor(C.gold));
-    closeBtn.on('pointerout', () => closeBtn.setColor('#778899'));
+    const closeBtn = scene.add
+      .text(px + pw / 2 - 14, py - ph / 2 + 12, "✕", {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "20px",
+        fontStyle: "bold",
+        color: "#778899",
+      })
+      .setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true });
+    closeBtn.on("pointerdown", () => this.hide());
+    closeBtn.on("pointerover", () => closeBtn.setColor(C.gold));
+    closeBtn.on("pointerout", () => closeBtn.setColor("#778899"));
     this._container.add(closeBtn);
 
     // ── Title ──
-    const title = scene.add.text(px, py - ph / 2 + 30, '🛒 CỬA HÀNG', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '24px',
-      fontStyle: 'bold',
-      color: C.gold,
-      stroke: '#000000',
-      strokeThickness: 3,
-    }).setOrigin(0.5);
+    const title = scene.add
+      .text(px, py - ph / 2 + 30, "🛒 CỬA HÀNG", {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "24px",
+        fontStyle: "bold",
+        color: C.gold,
+        stroke: "#000000",
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5);
     this._container.add(title);
 
     // ── Coins display ──
-    this._coinText = scene.add.text(px, py - ph / 2 + 62, '', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '16px',
-      fontStyle: 'bold',
-      color: C.gold,
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5);
+    this._coinText = scene.add
+      .text(px, py - ph / 2 + 62, "", {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "16px",
+        fontStyle: "bold",
+        color: C.gold,
+        stroke: "#000000",
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5);
     this._container.add(this._coinText);
 
     // ── Separator ──
@@ -119,11 +138,13 @@ export class ShopPanel {
     this._itemH = 92;
 
     // ── Close hint ──
-    const hint = scene.add.text(px, py + ph / 2 - 20, 'click nền tối hoặc ✕ để đóng', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '10px',
-      color: C.textMuted,
-    }).setOrigin(0.5);
+    const hint = scene.add
+      .text(px, py + ph / 2 - 20, "click nền tối hoặc ✕ để đóng", {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "10px",
+        color: C.textMuted,
+      })
+      .setOrigin(0.5);
     this._container.add(hint);
   }
 
@@ -133,7 +154,7 @@ export class ShopPanel {
     this._visible = true;
     this._container.setVisible(true);
     this._refresh();
-    if (typeof this._onVisibilityChange === 'function') {
+    if (typeof this._onVisibilityChange === "function") {
       this._onVisibilityChange(true);
     }
   }
@@ -144,7 +165,7 @@ export class ShopPanel {
     this._visible = false;
     this._killTweens();
     this._container.setVisible(false);
-    if (typeof this._onVisibilityChange === 'function') {
+    if (typeof this._onVisibilityChange === "function") {
       this._onVisibilityChange(false);
     }
   }
@@ -161,7 +182,9 @@ export class ShopPanel {
   }
 
   _killTweens() {
-    this._tweens.forEach(t => { if (t && typeof t.stop === 'function') t.stop(); });
+    this._tweens.forEach((t) => {
+      if (t && typeof t.stop === "function") t.stop();
+    });
     this._tweens = [];
   }
 
@@ -170,7 +193,7 @@ export class ShopPanel {
    */
   _refresh() {
     this._killTweens();
-    this._items.forEach(item => this._destroyItem(item));
+    this._items.forEach((item) => this._destroyItem(item));
     this._items = [];
     this._listContainer.removeAll(true);
 
@@ -179,7 +202,7 @@ export class ShopPanel {
     const catalog = this._shopSystem.getCatalog();
     const profile = this._getProfile();
     const coins = profile ? profile.coins : 0;
-    const selectedSkin = profile ? profile.selectedSkin : 'default';
+    const selectedSkin = profile ? profile.selectedSkin : "default";
 
     // Cập nhật coins display
     this._coinText.setText(`💰 Xu: ${coins}`);
@@ -191,20 +214,23 @@ export class ShopPanel {
     });
 
     // Nếu có skin special (gold) không mua được, hiển thị note cuối
-    const special = catalog.find(c => c.special);
+    const special = catalog.find((c) => c.special);
     if (special) {
       const y = this._listStartY + this._itemH * catalog.length;
-      const note = this.scene.add.text(
-        this._layout.px, y + 10,
-        `🌟 "${special.name}" chỉ mở khóa qua Thành tựu hoặc Phần thưởng hằng ngày`,
-        {
-          fontFamily: 'Arial, sans-serif',
-          fontSize: '11px',
-          color: C.textDim,
-          wordWrap: { width: this._layout.pw - 40 },
-          align: 'center',
-        }
-      ).setOrigin(0.5);
+      const note = this.scene.add
+        .text(
+          this._layout.px,
+          y + 10,
+          `🌟 "${special.name}" chỉ mở khóa qua Thành tựu hoặc Phần thưởng hằng ngày`,
+          {
+            fontFamily: "Arial, sans-serif",
+            fontSize: "11px",
+            color: C.textDim,
+            wordWrap: { width: this._layout.pw - 40 },
+            align: "center",
+          },
+        )
+        .setOrigin(0.5);
       this._listContainer.add(note);
       this._items.push([note]);
     }
@@ -230,7 +256,7 @@ export class ShopPanel {
 
     // ── Item background ──
     const bg = scene.add.graphics();
-    const bgColor = isEquipped ? 0x1a3a1a : (isOwned ? 0x1a1a3a : 0x1e1e30);
+    const bgColor = isEquipped ? 0x1a3a1a : isOwned ? 0x1a1a3a : 0x1e1e30;
     bg.fillStyle(bgColor, 0.7);
     bg.fillRoundedRect(px - pw / 2 + 10, y, pw - 20, this._itemH - 6, 10);
     this._listContainer.add(bg);
@@ -240,22 +266,22 @@ export class ShopPanel {
     const previewX = px - pw / 2 + 32;
     const previewY = y + (this._itemH - 6) / 2;
 
-    if (item.id === 'default') {
+    if (item.id === "default") {
       // Skin mặc định: hiển thị animation từ phai spritesheet
-      const animSprite = scene.add.sprite(previewX, previewY, 'player-shop-p1');
-      if (scene.anims.exists('player-shop-preview')) {
-        animSprite.play('player-shop-preview');
+      const animSprite = scene.add.sprite(previewX, previewY, "player-shop-p1");
+      if (scene.anims.exists("player-shop-preview")) {
+        animSprite.play("player-shop-preview");
       }
-      animSprite.setScale(0.65);
+      animSprite.setScale(0.7);
       this._listContainer.add(animSprite);
       elements.push(animSprite);
-    } else if (item.id === 'red') {
+    } else if (item.id === "red") {
       // Cô gái tóc vàng: hiển thị animation từ skin spritesheet
-      const animSprite = scene.add.sprite(previewX, previewY, 'skin-girl-0');
-      if (scene.anims.exists('skin-girl-preview')) {
-        animSprite.play('skin-girl-preview');
+      const animSprite = scene.add.sprite(previewX, previewY, "skin-girl-0");
+      if (scene.anims.exists("skin-girl-preview")) {
+        animSprite.play("skin-girl-preview");
       }
-      animSprite.setScale(0.65);
+      animSprite.setScale(0.7);
       this._listContainer.add(animSprite);
       elements.push(animSprite);
     } else {
@@ -277,14 +303,16 @@ export class ShopPanel {
     // ── Tên skin ──
     const nameX = px - pw / 2 + 58;
     const nameColor = isEquipped ? C.green : C.white;
-    const nameText = scene.add.text(nameX, y + 14, item.name, {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '17px',
-      fontStyle: 'bold',
-      color: nameColor,
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0, 0.5);
+    const nameText = scene.add
+      .text(nameX, y + 14, item.name, {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "17px",
+        fontStyle: "bold",
+        color: nameColor,
+        stroke: "#000000",
+        strokeThickness: 2,
+      })
+      .setOrigin(0, 0.5);
     this._listContainer.add(nameText);
     elements.push(nameText);
 
@@ -294,59 +322,77 @@ export class ShopPanel {
 
     if (isEquipped) {
       // Đang trang bị
-      const badge = scene.add.text(priceX, priceY, '✅ Đang sử dụng', {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '12px',
-        fontStyle: 'bold',
-        color: C.green,
-      }).setOrigin(0, 0.5);
+      const badge = scene.add
+        .text(priceX, priceY, "✅ Đang sử dụng", {
+          fontFamily: "Arial, sans-serif",
+          fontSize: "12px",
+          fontStyle: "bold",
+          color: C.green,
+        })
+        .setOrigin(0, 0.5);
       this._listContainer.add(badge);
       elements.push(badge);
     } else if (isOwned) {
       // Đã sở hữu — nút Trang bị
       const btnEl = this._createActionButton(
-        px + pw / 2 - 68, previewY, 90, 30,
-        '📌 Trang bị', 0x2d6a9f, 0x3d8adf,
+        px + pw / 2 - 68,
+        previewY,
+        90,
+        30,
+        "📌 Trang bị",
+        0x2d6a9f,
+        0x3d8adf,
         () => this._handleEquip(item.id),
       );
       elements.push(...btnEl);
     } else if (item.special) {
       // Special — không thể mua
-      const badge = scene.add.text(priceX, priceY, '🔒 Chỉ mở khóa qua thành tựu', {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '11px',
-        color: C.textDim,
-      }).setOrigin(0, 0.5);
+      const badge = scene.add
+        .text(priceX, priceY, "🔒 Chỉ mở khóa qua thành tựu", {
+          fontFamily: "Arial, sans-serif",
+          fontSize: "11px",
+          color: C.textDim,
+        })
+        .setOrigin(0, 0.5);
       this._listContainer.add(badge);
       elements.push(badge);
     } else {
       // Chưa sở hữu — hiện giá
       const priceColor = canBuy ? C.gold : C.red;
-      const priceText = scene.add.text(priceX, priceY, `💰 ${item.price} xu`, {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '13px',
-        fontStyle: 'bold',
-        color: priceColor,
-        stroke: '#000000',
-        strokeThickness: 1,
-      }).setOrigin(0, 0.5);
+      const priceText = scene.add
+        .text(priceX, priceY, `💰 ${item.price} xu`, {
+          fontFamily: "Arial, sans-serif",
+          fontSize: "13px",
+          fontStyle: "bold",
+          color: priceColor,
+          stroke: "#000000",
+          strokeThickness: 1,
+        })
+        .setOrigin(0, 0.5);
       this._listContainer.add(priceText);
       elements.push(priceText);
 
       // Nút Mua (nếu đủ xu)
       if (canBuy) {
         const btnEl = this._createActionButton(
-          px + pw / 2 - 68, previewY, 90, 30,
-          '🛒 Mua', 0x8e6f00, 0xc89f00,
+          px + pw / 2 - 68,
+          previewY,
+          90,
+          30,
+          "🛒 Mua",
+          0x8e6f00,
+          0xc89f00,
           () => this._handlePurchase(item.id),
         );
         elements.push(...btnEl);
       } else if (cannotAfford) {
-        const badge = scene.add.text(priceX + 80, priceY, '⚡ Thiếu xu', {
-          fontFamily: 'Arial, sans-serif',
-          fontSize: '11px',
-          color: C.red,
-        }).setOrigin(0, 0.5);
+        const badge = scene.add
+          .text(priceX + 80, priceY, "⚡ Thiếu xu", {
+            fontFamily: "Arial, sans-serif",
+            fontSize: "11px",
+            color: C.red,
+          })
+          .setOrigin(0, 0.5);
         this._listContainer.add(badge);
         elements.push(badge);
       }
@@ -377,29 +423,33 @@ export class ShopPanel {
     this._listContainer.add(bg);
     elements.push(bg);
 
-    const txt = scene.add.text(cx, cy, label, {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '11px',
-      fontStyle: 'bold',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 1,
-    }).setOrigin(0.5);
+    const txt = scene.add
+      .text(cx, cy, label, {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "11px",
+        fontStyle: "bold",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 1,
+      })
+      .setOrigin(0.5);
     this._listContainer.add(txt);
     elements.push(txt);
 
-    const zone = scene.add.zone(cx, cy, w, h).setInteractive({ useHandCursor: true });
-    zone.on('pointerover', () => {
+    const zone = scene.add
+      .zone(cx, cy, w, h)
+      .setInteractive({ useHandCursor: true });
+    zone.on("pointerover", () => {
       bg.clear();
       bg.fillStyle(hoverColor, 1);
       bg.fillRoundedRect(cx - w / 2, cy - h / 2, w, h, 8);
     });
-    zone.on('pointerout', () => {
+    zone.on("pointerout", () => {
       bg.clear();
       bg.fillStyle(color, 1);
       bg.fillRoundedRect(cx - w / 2, cy - h / 2, w, h, 8);
     });
-    zone.on('pointerdown', onClick);
+    zone.on("pointerdown", onClick);
     this._listContainer.add(zone);
     elements.push(zone);
 
@@ -417,7 +467,7 @@ export class ShopPanel {
     if (result.success) {
       this._refresh();
       // Thông báo cho PlayScene cập nhật skin ngay lập tức
-      this.scene.game.events.emit('skinChanged', skinId);
+      this.scene.game.events.emit("skinChanged", skinId);
     }
   }
 
@@ -432,7 +482,7 @@ export class ShopPanel {
     if (result.success) {
       this._refresh();
       // Thông báo cho PlayScene cập nhật skin ngay lập tức
-      this.scene.game.events.emit('skinChanged', skinId);
+      this.scene.game.events.emit("skinChanged", skinId);
     }
   }
 
@@ -443,29 +493,31 @@ export class ShopPanel {
    */
   _showToast(msg, success) {
     const scene = this.scene;
-    const toast = scene.add.text(
-      scene.scale.width / 2,
-      scene.scale.height * 0.78,
-      msg,
-      {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '16px',
-        fontStyle: 'bold',
-        color: success ? '#66ff88' : '#ff6666',
-        stroke: '#000000',
+    const toast = scene.add
+      .text(scene.scale.width / 2, scene.scale.height * 0.78, msg, {
+        fontFamily: "Arial, sans-serif",
+        fontSize: "16px",
+        fontStyle: "bold",
+        color: success ? "#66ff88" : "#ff6666",
+        stroke: "#000000",
         strokeThickness: 4,
         shadow: {
-          offsetX: 0, offsetY: 2, color: '#00000088', blur: 8, fill: true,
+          offsetX: 0,
+          offsetY: 2,
+          color: "#00000088",
+          blur: 8,
+          fill: true,
         },
-      }
-    ).setOrigin(0.5).setDepth(400);
+      })
+      .setOrigin(0.5)
+      .setDepth(400);
 
     scene.tweens.add({
       targets: toast,
       alpha: { from: 1, to: 0 },
       y: toast.y - 40,
       duration: 1800,
-      ease: 'Cubic.easeOut',
+      ease: "Cubic.easeOut",
       onComplete: () => toast.destroy(),
     });
   }
@@ -476,7 +528,10 @@ export class ShopPanel {
    * @returns {number|null}
    */
   _getSkinTint(skinId) {
-    if (this._skinSystem && typeof this._skinSystem.getSkinTint === 'function') {
+    if (
+      this._skinSystem &&
+      typeof this._skinSystem.getSkinTint === "function"
+    ) {
       return this._skinSystem.getSkinTint(skinId);
     }
     return null;
@@ -484,7 +539,7 @@ export class ShopPanel {
 
   /** @returns {import('../profile/PlayerProfile.js').PlayerProfile|null} */
   _getProfile() {
-    return this.scene.game.registry.get('playerProfile');
+    return this.scene.game.registry.get("playerProfile");
   }
 
   /**
@@ -492,8 +547,8 @@ export class ShopPanel {
    * @param {object[]} elements
    */
   _destroyItem(elements) {
-    elements.forEach(el => {
-      if (el && typeof el.destroy === 'function') {
+    elements.forEach((el) => {
+      if (el && typeof el.destroy === "function") {
         this.scene.tweens.killTweensOf(el);
         el.destroy();
       }
@@ -503,7 +558,7 @@ export class ShopPanel {
   /** Dọn dẹp khi scene shutdown */
   destroy() {
     this._killTweens();
-    this._items.forEach(item => this._destroyItem(item));
+    this._items.forEach((item) => this._destroyItem(item));
     this._items = [];
     this._container.destroy(true);
   }
