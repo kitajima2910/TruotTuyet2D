@@ -30,7 +30,7 @@ import { PlayerProfile } from '../profile/PlayerProfile.js';
  *   color     — màu tint cho sprite player (null = không tint)
  */
 const SKIN_DEFS = Object.freeze([
-  { id: 'default', name: 'Mặc định',  cost: 0,    color: null },
+  { id: 'default', name: 'Cậu bé len xanh',  cost: 0,    color: null },
   { id: 'red',     name: 'Đỏ rực',    cost: 500,  color: 0xff4444 },
   { id: 'blue',    name: 'Xanh dương', cost: 1000, color: 0x4488ff },
   { id: 'green',   name: 'Xanh lá',   cost: 1500, color: 0x44cc44 },

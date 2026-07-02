@@ -23,7 +23,7 @@
  *   special — true nếu chỉ mở khóa qua Achievement/DailyReward
  */
 const CATALOG_DEFS = Object.freeze([
-  { id: 'default', name: 'Mặc định',  price: 0,    special: false },
+  { id: 'default', name: 'Cậu bé len xanh',  price: 0,    special: false },
   { id: 'red',     name: 'Đỏ rực',    price: 500,  special: false },
   { id: 'blue',    name: 'Xanh dương', price: 1000, special: false },
   { id: 'green',   name: 'Xanh lá',   price: 1500, special: false },
