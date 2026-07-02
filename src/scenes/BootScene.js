@@ -27,6 +27,14 @@ export class BootScene extends Phaser.Scene {
     this.load.image('player-shop-p2', 'assets/player/phai/p2.png');
     this.load.image('player-shop-p3', 'assets/player/phai/p3.png');
     this.load.image('player-shop-p4', 'assets/player/phai/p4.png');
+
+    // ── Cô gái tóc vàng skin (right spritesheet) ──
+    this.load.image('skin-girl-0', 'assets/skins/co-gai-toc-vang/right/0.png');
+    this.load.image('skin-girl-1', 'assets/skins/co-gai-toc-vang/right/1.png');
+    this.load.image('skin-girl-2', 'assets/skins/co-gai-toc-vang/right/2.png');
+    this.load.image('skin-girl-3', 'assets/skins/co-gai-toc-vang/right/3.png');
+    this.load.image('skin-girl-4', 'assets/skins/co-gai-toc-vang/right/4.png');
+    this.load.image('skin-girl-5', 'assets/skins/co-gai-toc-vang/right/5.png');
   }
 
   create() {
@@ -42,6 +50,23 @@ export class BootScene extends Phaser.Scene {
         ],
         frameRate: 6,
         repeat: -1, // loop vô hạn
+      });
+    }
+
+    // ── Animation preview cho skin Cô gái tóc vàng ──
+    if (!this.anims.exists('skin-girl-preview')) {
+      this.anims.create({
+        key: 'skin-girl-preview',
+        frames: [
+          { key: 'skin-girl-0' },
+          { key: 'skin-girl-1' },
+          { key: 'skin-girl-2' },
+          { key: 'skin-girl-3' },
+          { key: 'skin-girl-4' },
+          { key: 'skin-girl-5' },
+        ],
+        frameRate: 6,
+        repeat: -1,
       });
     }
 

@@ -31,7 +31,7 @@ import { PlayerProfile } from '../profile/PlayerProfile.js';
  */
 const SKIN_DEFS = Object.freeze([
   { id: 'default', name: 'Cậu bé len xanh',  cost: 0,    color: null },
-  { id: 'red',     name: 'Đỏ rực',    cost: 500,  color: 0xff4444 },
+  { id: 'red',     name: 'Cô gái tóc vàng', cost: 500,  color: 0xffdd88 },
   { id: 'blue',    name: 'Xanh dương', cost: 1000, color: 0x4488ff },
   { id: 'green',   name: 'Xanh lá',   cost: 1500, color: 0x44cc44 },
   { id: 'gold',    name: 'Vàng',      cost: -1,   color: 0xffd700 },

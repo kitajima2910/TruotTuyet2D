@@ -249,6 +249,15 @@ export class ShopPanel {
       animSprite.setScale(0.65);
       this._listContainer.add(animSprite);
       elements.push(animSprite);
+    } else if (item.id === 'red') {
+      // Cô gái tóc vàng: hiển thị animation từ skin spritesheet
+      const animSprite = scene.add.sprite(previewX, previewY, 'skin-girl-0');
+      if (scene.anims.exists('skin-girl-preview')) {
+        animSprite.play('skin-girl-preview');
+      }
+      animSprite.setScale(0.65);
+      this._listContainer.add(animSprite);
+      elements.push(animSprite);
     } else {
       // Skin khác: hiển thị vòng tròn màu
       const tint = this._getSkinTint(item.id);
