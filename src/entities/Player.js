@@ -47,6 +47,7 @@ export class Player {
     this.velocityX = 0;
     this._currentAnim = null; // track animation hiện tại
     this._targetRotation = 0; // rotation mục tiêu (radians)
+    this._animPrefix = 'player-'; // prefix cho animation key (đổi theo skin)
 
     // ── Sprite (dùng sprite thay vì rectangle) ──
     this.sprite = scene.add.sprite(x, y, "player-tren-1");
@@ -133,18 +134,17 @@ export class Player {
     let targetAnim;
 
     if (this._isJumping) {
-      // Chỉ dùng player-jump cho cả 2 phase (không dùng duoi nữa)
-      targetAnim = "player-jump";
+      targetAnim = this._animPrefix + "jump";
       this._targetRotation = 0;
     } else if (inputDir < 0) {
-      targetAnim = "player-left";
-      this._targetRotation = Phaser.Math.DegToRad(this.tiltAngle); // nghiêng trái
+      targetAnim = this._animPrefix + "left";
+      this._targetRotation = Phaser.Math.DegToRad(this.tiltAngle);
     } else if (inputDir > 0) {
-      targetAnim = "player-right";
-      this._targetRotation = Phaser.Math.DegToRad(-this.tiltAngle); // nghiêng phải
+      targetAnim = this._animPrefix + "right";
+      this._targetRotation = Phaser.Math.DegToRad(-this.tiltAngle);
     } else {
-      targetAnim = "player-idle";
-      this._targetRotation = 0; // về thẳng
+      targetAnim = this._animPrefix + "idle";
+      this._targetRotation = 0;
     }
 
     // Chỉ play nếu khác animation hiện tại (tránh replay liên tục)
@@ -181,8 +181,9 @@ export class Player {
     this._jumpPhase = null;
     this.groundY = y;
     this._currentAnim = null; // force animation switch ở update kế tiếp
-    this.sprite.play("player-idle");
-    this._currentAnim = "player-idle";
+    const idleKey = this._animPrefix + "idle";
+    this.sprite.play(idleKey);
+    this._currentAnim = idleKey;
     this._targetRotation = 0;
     this.sprite.rotation = 0;
     this.sprite.setAlpha(1);
@@ -197,9 +198,48 @@ export class Player {
     this._isJumping = true;
     this._jumpPhase = "goingUp";
     this.velocityY = this.jumpVelocity;
-    this.sprite.play("player-jump");
-    this._currentAnim = "player-jump";
+    const jumpKey = this._animPrefix + "jump";
+    this.sprite.play(jumpKey);
+    this._currentAnim = jumpKey;
     return true;
+  }
+
+  /**
+   * Chuyển đổi bộ animation theo skin.
+   * Skin 'red' (Cô gái tóc vàng) dùng prefix 'skin-girl-', các skin khác dùng 'player-'.
+   * @param {string} skinId
+   */
+  setSkin(skinId) {
+    const newPrefix = (skinId === 'red') ? 'skin-girl-' : 'player-';
+    this._animPrefix = newPrefix;
+    this._currentAnim = null; // force refresh
+
+    // Scale sprite cho vừa với default (85×89) khi dùng skin có kích thước nhỏ hơn
+    if (skinId === 'red') {
+      this.sprite.setScale(1.6);
+    } else {
+      this.sprite.setScale(1.0);
+    }
+
+    // Play animation idle ngay lập tức để skin đồng nhất real-time
+    // (kể cả khi game đang paused do shop mở)
+    const idleKey = this._animPrefix + 'idle';
+    if (this.scene.anims.exists(idleKey)) {
+      this.sprite.play(idleKey);
+      this._currentAnim = idleKey;
+    }
+  }
+
+  /**
+   * Phát animation va chạm theo skin hiện tại.
+   * Skin có spritesheet riêng dùng 'hit', mặc định dùng 'collision'.
+   */
+  playCollisionAnim() {
+    const key = this._animPrefix + (this._animPrefix === 'skin-girl-' ? 'hit' : 'collision');
+    if (this.scene.anims.exists(key)) {
+      this.sprite.play(key);
+      this._currentAnim = key;
+    }
   }
 
   /** @returns {boolean} — true nếu đang trong không trung */

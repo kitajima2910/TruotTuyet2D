@@ -163,6 +163,13 @@ export class LoadingScene extends Phaser.Scene {
     this.load.audio('bgm',        'assets/audio/bgm-level1.mp3');
     this.load.audio('bgm-level2', 'assets/audio/bgm-level2.mp3');
     this.load.audio('bgm-level3', 'assets/audio/bgm-level3.mp3');
+
+    // ── Skin: Cô gái tóc vàng (gameplay animations) ──
+    for (let i = 0; i <= 5; i++) this.load.image(`skin-girl-idle-${i}`, `assets/skins/co-gai-toc-vang/default/${i}.png`);
+    for (let i = 0; i <= 2; i++) this.load.image(`skin-girl-left-${i}`, `assets/skins/co-gai-toc-vang/left/${i}.png`);
+    for (let i = 0; i <= 5; i++) this.load.image(`skin-girl-right-${i}`, `assets/skins/co-gai-toc-vang/right/${i}.png`);
+    for (let i = 0; i <= 4; i++) this.load.image(`skin-girl-jump-${i}`, `assets/skins/co-gai-toc-vang/jump/${i}.png`);
+    for (let i = 0; i <= 3; i++) this.load.image(`skin-girl-hit-${i}`, `assets/skins/co-gai-toc-vang/hit/${i}.png`);
   }
 
   create() {
@@ -233,6 +240,66 @@ export class LoadingScene extends Phaser.Scene {
         frames: this.anims.generateFrameNumbers('player-jump-sheet', { start: 0, end: 3 }),
         frameRate: 12,
         repeat: -1, // loop — dùng cho cả đi lên và rơi xuống
+      });
+    }
+
+    // ── Skin: Cô gái tóc vàng animations ──
+    if (!this.anims.exists('skin-girl-idle')) {
+      this.anims.create({
+        key: 'skin-girl-idle',
+        frames: [
+          { key: 'skin-girl-idle-0' }, { key: 'skin-girl-idle-1' },
+          { key: 'skin-girl-idle-2' }, { key: 'skin-girl-idle-3' },
+          { key: 'skin-girl-idle-4' }, { key: 'skin-girl-idle-5' },
+        ],
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+    if (!this.anims.exists('skin-girl-left')) {
+      this.anims.create({
+        key: 'skin-girl-left',
+        frames: [
+          { key: 'skin-girl-left-0' }, { key: 'skin-girl-left-1' },
+          { key: 'skin-girl-left-2' },
+        ],
+        frameRate: 10,
+        repeat: -1,
+      });
+    }
+    if (!this.anims.exists('skin-girl-right')) {
+      this.anims.create({
+        key: 'skin-girl-right',
+        frames: [
+          { key: 'skin-girl-right-0' }, { key: 'skin-girl-right-1' },
+          { key: 'skin-girl-right-2' }, { key: 'skin-girl-right-3' },
+          { key: 'skin-girl-right-4' }, { key: 'skin-girl-right-5' },
+        ],
+        frameRate: 10,
+        repeat: -1,
+      });
+    }
+    if (!this.anims.exists('skin-girl-jump')) {
+      this.anims.create({
+        key: 'skin-girl-jump',
+        frames: [
+          { key: 'skin-girl-jump-0' }, { key: 'skin-girl-jump-1' },
+          { key: 'skin-girl-jump-2' }, { key: 'skin-girl-jump-3' },
+          { key: 'skin-girl-jump-4' },
+        ],
+        frameRate: 12,
+        repeat: -1,
+      });
+    }
+    if (!this.anims.exists('skin-girl-hit')) {
+      this.anims.create({
+        key: 'skin-girl-hit',
+        frames: [
+          { key: 'skin-girl-hit-0' }, { key: 'skin-girl-hit-1' },
+          { key: 'skin-girl-hit-2' }, { key: 'skin-girl-hit-3' },
+        ],
+        frameRate: 10,
+        repeat: 0,
       });
     }
 

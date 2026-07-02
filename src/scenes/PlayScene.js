@@ -168,26 +168,36 @@ export class PlayScene extends Phaser.Scene {
     this._player = new Player(this, width / 2, height * 0.75);
     this._player.sprite.setDepth(10);
 
-    // ── Auto-apply equipped skin tint ──
+    // ── Auto-apply equipped skin ──
     this._skinTint = null;
     const skinSystem = SkinSystem.get(this.game.registry);
     if (skinSystem) {
       const selected = skinSystem.getSelected();
       if (selected) {
-        this._skinTint = skinSystem.getSkinTint(selected.id);
-        if (this._skinTint) {
-          this._player.sprite.setTint(this._skinTint);
+        this._player.setSkin(selected.id);
+        if (selected.id !== 'red') {
+          this._skinTint = skinSystem.getSkinTint(selected.id);
+          if (this._skinTint) {
+            this._player.sprite.setTint(this._skinTint);
+          }
         }
       }
     }
 
     // ── Lắng nghe sự kiện đổi skin từ Shop ──
     this._onSkinChanged = (skinId) => {
-      this._skinTint = skinSystem.getSkinTint(skinId);
-      if (this._skinTint) {
-        this._player.sprite.setTint(this._skinTint);
-      } else {
+      this._player.setSkin(skinId);
+      if (skinId === 'red') {
+        this._skinTint = null;
         this._player.sprite.clearTint();
+      } else {
+        const tint = skinSystem.getSkinTint(skinId);
+        this._skinTint = tint;
+        if (tint) {
+          this._player.sprite.setTint(tint);
+        } else {
+          this._player.sprite.clearTint();
+        }
       }
     };
     this.game.events.on('skinChanged', this._onSkinChanged);
@@ -611,7 +621,7 @@ export class PlayScene extends Phaser.Scene {
     this._spawnSystem.pauseSpawning = true;
 
     this._player.velocityX = 0;
-    this._player.sprite.play('player-collision');
+    this._player.playCollisionAnim();
 
     this.cameras.main.shake(180, 0.008);
   }
@@ -676,7 +686,7 @@ export class PlayScene extends Phaser.Scene {
     audio?.stopBGM();
     this._showDeathFlash();
 
-    this._player.sprite.play('player-collision');
+    this._player.playCollisionAnim();
 
     // Mission: GAME_COMPLETED (thay đổi cuối cùng, không cần toast)
     this._missionSystem?.updateProgress('GAME_COMPLETED', 1);
