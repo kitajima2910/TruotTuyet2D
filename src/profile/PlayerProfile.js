@@ -63,6 +63,15 @@ export class PlayerProfile {
   }
 
   /**
+   * Kiểm tra có đủ xu để chi tiêu không.
+   * @param {number} amount — số xu cần chi
+   * @returns {boolean}
+   */
+  hasEnoughCoins(amount) {
+    return amount >= 0 && this.coins >= amount;
+  }
+
+  /**
    * Chuyển đổi profile → plain object để lưu JSON.
    * @returns {object}
    */

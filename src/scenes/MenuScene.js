@@ -5,6 +5,8 @@
 
 import { DailyRewardPanel } from '../ui/DailyRewardPanel.js';
 import { HowToPlayPanel } from '../ui/HowToPlayPanel.js';
+import { ShopPanel } from '../ui/ShopPanel.js';
+import { ShopSystem } from '../systems/ShopSystem.js';
 import { GAME_VERSION, COMMIT_HASH } from '../version.js';
 
 export class MenuScene extends Phaser.Scene {
@@ -126,6 +128,14 @@ export class MenuScene extends Phaser.Scene {
       },
     });
 
+    // ── Khởi tạo ShopSystem (nếu chưa có) ──
+    let shopSystem = ShopSystem.get(this.game.registry);
+    if (!shopSystem) {
+      shopSystem = new ShopSystem(this.game.registry);
+      ShopSystem.register(this.game.registry, shopSystem);
+      shopSystem.loadCatalog();
+    }
+
     // ── HowToPlayPanel ──
     this._howToPlayPanel = new HowToPlayPanel(this);
     this._howToPlayPanel.hide();
@@ -134,8 +144,15 @@ export class MenuScene extends Phaser.Scene {
     this._dailyRewardPanel = new DailyRewardPanel(this);
     this._dailyRewardPanel.hide();
 
+    // ── ShopPanel ──
+    this._shopPanel = new ShopPanel(this);
+    this._shopPanel.hide();
+
+    // ── Nút Shop ──
+    this._createShopButton(centerX, height * 0.85);
+
     // ── Nút Hướng dẫn ──
-    this._createHowToPlayButton(centerX, height * 0.85);
+    this._createHowToPlayButton(centerX, height * 0.88);
 
     // ── Nút Daily Reward ──
     this._createDailyRewardButton(centerX, height * 0.91);
@@ -173,6 +190,41 @@ export class MenuScene extends Phaser.Scene {
     btn.on('pointerdown', () => {
       if (this._dailyRewardPanel) {
         this._dailyRewardPanel.show();
+      }
+    });
+  }
+
+  /**
+   * Tạo nút Shop.
+   */
+  _createShopButton(x, y) {
+    const btn = this.add.text(x, y, '🛒 Cửa hàng', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      fontStyle: 'bold',
+      color: '#ffaa66',
+      stroke: '#000000',
+      strokeThickness: 3,
+      shadow: {
+        offsetX: 1,
+        offsetY: 1,
+        color: '#00000044',
+        blur: 4,
+        fill: true,
+      },
+    }).setOrigin(0.5).setDepth(1).setInteractive({ useHandCursor: true });
+
+    btn.on('pointerover', () => {
+      btn.setColor('#ffffff');
+      btn.setScale(1.05);
+    });
+    btn.on('pointerout', () => {
+      btn.setColor('#ffaa66');
+      btn.setScale(1);
+    });
+    btn.on('pointerdown', () => {
+      if (this._shopPanel) {
+        this._shopPanel.show();
       }
     });
   }

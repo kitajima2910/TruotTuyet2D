@@ -24,6 +24,7 @@ import { DifficultySystem } from '../systems/DifficultySystem.js';
 import { AudioManager } from '../managers/AudioManager.js';
 import { AssetManager } from '../managers/AssetManager.js';
 import { MissionSystem } from '../systems/MissionSystem.js';
+import { SkinSystem } from '../systems/SkinSystem.js';
 
 // ── Cấu hình độ khó theo level ──
 const LEVEL_CONFIG = {
@@ -166,6 +167,19 @@ export class PlayScene extends Phaser.Scene {
     // ── Player ──
     this._player = new Player(this, width / 2, height * 0.75);
     this._player.sprite.setDepth(10);
+
+    // ── Auto-apply equipped skin tint ──
+    this._skinTint = null;
+    const skinSystem = SkinSystem.get(this.game.registry);
+    if (skinSystem) {
+      const selected = skinSystem.getSelected();
+      if (selected) {
+        this._skinTint = skinSystem.getSkinTint(selected.id);
+        if (this._skinTint) {
+          this._player.sprite.setTint(this._skinTint);
+        }
+      }
+    }
 
     // ── SpawnSystem ──
     this._spawnSystem = new SpawnSystem(this, {
@@ -520,6 +534,8 @@ export class PlayScene extends Phaser.Scene {
       this._boosted = false;
       this._boostTimer = 0;
       this._player.sprite.clearTint();
+      // Khôi phục skin tint sau khi boost kết thúc
+      if (this._skinTint) this._player.sprite.setTint(this._skinTint);
       this._setBoostGlow(false);
       this.game.events.emit('boostUpdate', null);
     } else {
@@ -610,6 +626,8 @@ export class PlayScene extends Phaser.Scene {
       this._boosted = false;
       this._boostTimer = 0;
       this._player.sprite.clearTint();
+      // Khôi phục skin tint sau khi mất boost do va chạm
+      if (this._skinTint) this._player.sprite.setTint(this._skinTint);
       this._setBoostGlow(false);
       this.game.events.emit('boostUpdate', null);
     }
@@ -636,6 +654,8 @@ export class PlayScene extends Phaser.Scene {
     this._boosted = false;
     this._boostTimer = 0;
     this._player.sprite.clearTint();
+    // Khôi phục skin tint (cho animation chết hiển thị đúng skin)
+    if (this._skinTint) this._player.sprite.setTint(this._skinTint);
     this._setBoostGlow(false);
     this.game.events.emit('boostUpdate', null);
 

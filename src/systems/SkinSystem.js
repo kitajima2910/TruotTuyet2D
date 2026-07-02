@@ -26,13 +26,15 @@ import { PlayerProfile } from '../profile/PlayerProfile.js';
  * Khi thêm skin mới, chỉ cần thêm object vào mảng này.
  *   id        — định danh duy nhất
  *   name      — tên hiển thị
- *   cost      — số xu cần để mở khóa (0 = mặc định)
+ *   cost      — số xu cần để mở khóa (0 = mặc định, -1 = không thể mua)
+ *   color     — màu tint cho sprite player (null = không tint)
  */
 const SKIN_DEFS = Object.freeze([
-  { id: 'default', name: 'Mặc định', cost: 0 },
-  { id: 'red',     name: 'Đỏ rực',   cost: 100 },
-  { id: 'blue',    name: 'Xanh dương', cost: 100 },
-  { id: 'gold',    name: 'Vàng',      cost: 200 },
+  { id: 'default', name: 'Mặc định',  cost: 0,    color: null },
+  { id: 'red',     name: 'Đỏ rực',    cost: 500,  color: 0xff4444 },
+  { id: 'blue',    name: 'Xanh dương', cost: 1000, color: 0x4488ff },
+  { id: 'green',   name: 'Xanh lá',   cost: 1500, color: 0x44cc44 },
+  { id: 'gold',    name: 'Vàng',      cost: -1,   color: 0xffd700 },
 ]);
 
 export class SkinSystem {
@@ -61,13 +63,13 @@ export class SkinSystem {
     return registry.get('skinSystem');
   }
 
-  /** @returns {ReadonlyArray<{id: string, name: string, cost: number}>} */
+  /** @returns {ReadonlyArray<{id: string, name: string, cost: number, color: number|null}>} */
   static get SKINS() { return SKIN_DEFS; }
 
   /**
    * Lấy danh sách tất cả skin có sẵn.
    * Mỗi skin có thêm trường `owned` dynamically.
-   * @returns {Array<{id: string, name: string, cost: number, owned: boolean}>}
+   * @returns {Array<{id: string, name: string, cost: number, color: number|null, owned: boolean}>}
    */
   getSkins() {
     return SKIN_DEFS.map(s => ({
@@ -110,16 +112,26 @@ export class SkinSystem {
 
   /**
    * Lấy skin đang được trang bị.
-   * @returns {{ id: string, name: string, cost: number }|undefined}
+   * @returns {{ id: string, name: string, cost: number, color: number|null }|undefined}
    */
   getSelected() {
     return SKIN_DEFS.find(s => s.id === this._profile.selectedSkin);
   }
 
   /**
+   * Lấy màu tint cho skin theo ID.
+   * @param {string} skinId
+   * @returns {number|null} — màu hex, null nếu không có tint
+   */
+  getSkinTint(skinId) {
+    const def = SKIN_DEFS.find(s => s.id === skinId);
+    return def ? def.color : null;
+  }
+
+  /**
    * Lấy thông tin skin theo ID, kèm trạng thái owned.
    * @param {string} skinId
-   * @returns {{ id: string, name: string, cost: number, owned: boolean }|null}
+   * @returns {{ id: string, name: string, cost: number, color: number|null, owned: boolean }|null}
    */
   getSkinById(skinId) {
     const def = SKIN_DEFS.find(s => s.id === skinId);

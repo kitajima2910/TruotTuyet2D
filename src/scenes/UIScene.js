@@ -21,6 +21,7 @@ import { MissionPanel } from '../ui/MissionPanel.js';
 import { MissionLogDisplay } from '../ui/MissionLogDisplay.js';
 import { AchievementPanel } from '../ui/AchievementPanel.js';
 import { DailyRewardPanel } from '../ui/DailyRewardPanel.js';
+import { ShopPanel } from '../ui/ShopPanel.js';
 
 export class UIScene extends Phaser.Scene {
   constructor() {
@@ -146,6 +147,9 @@ export class UIScene extends Phaser.Scene {
     // Missions (giữa dưới)
     this._missionBtn = this._mkCircleBtn(width / 2, bottomY, btnR, '📋', () => this._toggleMissions());
 
+    // Shop (giữa-phải dưới, giữa Missions và Achievement)
+    this._shopBtn = this._mkCircleBtn(width * 0.59, bottomY, btnR, '🛒', () => this._toggleShop());
+
     // Achievement (giữa-phải dưới)
     this._achieveBtn = this._mkCircleBtn(width * 0.68, bottomY, btnR, '🏆', () => this._toggleAchievements());
 
@@ -203,6 +207,8 @@ export class UIScene extends Phaser.Scene {
         this._achievementPanel.hide();
       } else if (this._dailyRewardPanel && this._dailyRewardPanel.isVisible()) {
         this._dailyRewardPanel.hide();
+      } else if (this._shopPanel && this._shopPanel.isVisible()) {
+        this._shopPanel.hide();
       } else {
         this._togglePause();
       }
@@ -219,6 +225,10 @@ export class UIScene extends Phaser.Scene {
     // ── DailyRewardPanel ──
     this._dailyRewardPanel = new DailyRewardPanel(this, (visible) => this._onDailyRewardVisibility(visible));
     this._dailyRewardPanel.hide();
+
+    // ── ShopPanel ──
+    this._shopPanel = new ShopPanel(this, (visible) => this._onShopVisibility(visible));
+    this._shopPanel.hide();
 
     // ── MissionLogDisplay (toast notifications) ──
     this._missionLog = new MissionLogDisplay(this);
@@ -485,6 +495,35 @@ export class UIScene extends Phaser.Scene {
   }
 
   /* ───────────────────────────────────────────
+   *  SHOP PANEL
+   * ─────────────────────────────────────────── */
+
+  /**
+   * Callback khi ShopPanel show/hide — pause/resume game.
+   * @param {boolean} visible
+   */
+  _onShopVisibility(visible) {
+    const ps = this.scene.get('PlayScene');
+    if (!ps) return;
+
+    if (visible) {
+      ps._paused = true;
+    } else {
+      ps._paused = false;
+    }
+  }
+
+  _toggleShop() {
+    if (this._shopPanel) {
+      if (!this._shopPanel.isVisible()) {
+        const ps = this.scene.get('PlayScene');
+        if (ps && ps._paused && !ps._isDead) return;
+      }
+      this._shopPanel.toggle();
+    }
+  }
+
+  /* ───────────────────────────────────────────
    *  PAUSE / RESUME
    * ─────────────────────────────────────────── */
 
@@ -492,9 +531,13 @@ export class UIScene extends Phaser.Scene {
     const ps = this.scene.get('PlayScene');
     if (!ps) return;
 
-    // Đang mở missions → đóng missions trước (và game sẽ resume qua callback)
+    // Đang mở missions/shop → đóng trước (game resume qua callback)
     if (this._missionPanel && this._missionPanel.isVisible()) {
       this._missionPanel.hide();
+      return;
+    }
+    if (this._shopPanel && this._shopPanel.isVisible()) {
+      this._shopPanel.hide();
       return;
     }
 
@@ -553,6 +596,10 @@ export class UIScene extends Phaser.Scene {
     if (this._dailyRewardPanel) {
       this._dailyRewardPanel.destroy();
       this._dailyRewardPanel = null;
+    }
+    if (this._shopPanel) {
+      this._shopPanel.destroy();
+      this._shopPanel = null;
     }
   }
 }
